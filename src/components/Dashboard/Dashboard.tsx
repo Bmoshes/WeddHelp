@@ -10,6 +10,14 @@ import { Guest } from '../../types';
 export const Dashboard: React.FC = () => {
     const { assignGuestToTable, unassignGuest, guests } = useSeatingStore();
     const [activeGuest, setActiveGuest] = React.useState<Guest | null>(null);
+    const [isSidebarOpen, setIsSidebarOpen] = React.useState(true); // Default open on desktop
+
+    // Auto-collapse sidebar on mobile on initial load
+    React.useEffect(() => {
+        if (window.innerWidth < 768) {
+            setIsSidebarOpen(false);
+        }
+    }, []);
 
     const sensors = useSensors(
         useSensor(PointerSensor, {
@@ -54,17 +62,47 @@ export const Dashboard: React.FC = () => {
             onDragStart={handleDragStart}
             onDragEnd={handleDragEnd}
         >
-            <div className="flex h-screen bg-stone-50 overflow-hidden">
+            <div className="flex flex-col md:flex-row h-screen bg-stone-50 overflow-hidden">
+                {/* Mobile Header / Toggle */}
+                <div className="md:hidden flex items-center justify-between p-4 bg-white border-b border-stone-200 z-30">
+                    <h1 className="text-xl font-bold text-stone-800">
+                        <span className="text-amber-500">✨</span> Wedding Planner
+                    </h1>
+                    <button
+                        onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+                        className="p-2 rounded-lg bg-stone-100 text-stone-600"
+                    >
+                        {isSidebarOpen ? 'סגור אורחים' : '📋 רשימת אורחים'}
+                    </button>
+                </div>
+
                 {/* Side Panel - Guest List */}
-                <div className="w-[380px] shrink-0 h-full relative z-20">
+                <div className={`
+                    fixed inset-0 z-20 bg-black/20 backdrop-blur-sm md:hidden transition-opacity duration-300
+                    ${isSidebarOpen ? 'opacity-100' : 'opacity-0 pointer-events-none'}
+                `} onClick={() => setIsSidebarOpen(false)} />
+
+                <div className={`
+                    fixed md:relative z-20 h-full bg-white shadow-xl md:shadow-none transition-transform duration-300 ease-in-out
+                    w-[85vw] md:w-[380px] shrink-0 border-l border-stone-200
+                    ${isSidebarOpen ? 'translate-x-0' : 'translate-x-[100%] md:translate-x-0'}
+                    right-0 top-0
+                `}>
                     <GuestList />
+                    {/* Mobile close button inside drawer */}
+                    <button
+                        onClick={() => setIsSidebarOpen(false)}
+                        className="md:hidden absolute top-4 left-4 p-2 text-stone-400 hover:text-stone-600"
+                    >
+                        ✕
+                    </button>
                 </div>
 
                 {/* Main Content Area */}
-                <div className="flex-1 flex flex-col h-full overflow-hidden relative">
+                <div className="flex-1 flex flex-col h-full overflow-hidden relative w-full">
                     {/* Header / Status Bar Area */}
-                    <div className="p-6 pb-2 shrink-0 z-10">
-                        <header className="mb-6 flex items-baseline justify-between">
+                    <div className="p-4 md:p-6 pb-2 shrink-0 z-10 bg-stone-50">
+                        <header className="hidden md:flex items-baseline justify-between mb-6">
                             <div>
                                 <h1 className="text-3xl font-bold text-stone-800 tracking-tight">
                                     <span className="text-amber-500">✨</span> Wedding Planner
@@ -76,7 +114,7 @@ export const Dashboard: React.FC = () => {
                     </div>
 
                     {/* Scrollable Grid Area */}
-                    <div className="flex-1 overflow-hidden px-6 pb-6">
+                    <div className="flex-1 overflow-hidden px-4 md:px-6 pb-6">
                         <TablesGrid />
                     </div>
                 </div>

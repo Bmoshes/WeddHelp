@@ -341,40 +341,40 @@ export const StatusBar: React.FC = () => {
                     </div>
 
                     {/* Actions */}
-                    <div className="flex gap-3 flex-wrap items-center">
+                    <div className="flex gap-3 flex-wrap items-center mt-4 lg:mt-0 w-full lg:w-auto justify-end">
                         <Button
                             variant="secondary"
-                            className="border-stone-200 hover:border-blue-400 hover:text-blue-700 hover:bg-blue-50 text-stone-600"
+                            className="border-stone-200 hover:border-blue-400 hover:text-blue-700 hover:bg-blue-50 text-stone-600 flex-1 lg:flex-none justify-center"
                             onClick={handleDownloadTemplate}
                         >
-                            <span className="ml-2">📋</span> הורד תבנית
+                            <span className="ml-2">📋</span> <span className="hidden sm:inline">הורד</span> תבנית
                         </Button>
 
                         <Button
                             variant="secondary"
-                            className="border-stone-200 hover:border-amber-400 hover:text-amber-700 hover:bg-amber-50 text-stone-600"
+                            className="border-stone-200 hover:border-amber-400 hover:text-amber-700 hover:bg-amber-50 text-stone-600 flex-1 lg:flex-none justify-center"
                             onClick={() => setShowImport(true)}
                         >
-                            <span className="ml-2">📊</span> ייבוא Excel
+                            <span className="ml-2">📊</span> ייבוא <span className="hidden sm:inline">Excel</span>
                         </Button>
 
                         <Button
                             variant="secondary"
                             onClick={handleExcelExport}
-                            className="border-stone-200 hover:border-green-400 hover:text-green-700 hover:bg-green-50 text-stone-600"
+                            className="border-stone-200 hover:border-green-400 hover:text-green-700 hover:bg-green-50 text-stone-600 flex-1 lg:flex-none justify-center"
                         >
-                            <span className="ml-2">📥</span> יצוא לאקסל
+                            <span className="ml-2">📥</span> יצוא <span className="hidden sm:inline">לאקסל</span>
                         </Button>
 
-                        <div className="h-8 w-px bg-stone-200 mx-1 hidden md:block"></div>
+                        <div className="h-8 w-px bg-stone-200 mx-1 hidden lg:block"></div>
 
                         <Button
                             variant="primary"
                             onClick={handleOptimize}
                             disabled={optimizationProgress.isRunning}
-                            className="bg-slate-800 hover:bg-slate-700 text-white shadow-lg hover:shadow-xl transition-all"
+                            className="bg-slate-800 hover:bg-slate-700 text-white shadow-lg hover:shadow-xl transition-all w-full sm:w-auto justify-center"
                         >
-                            {optimizationProgress.isRunning ? '⏳ מעבד...' : '✨ אופטימיזציה אוטומטית'}
+                            {optimizationProgress.isRunning ? '⏳ מעבד...' : '✨ אופטימיזציה'}
                         </Button>
 
                         <div className="relative group">

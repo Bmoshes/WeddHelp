@@ -34,7 +34,7 @@ export const GuestList: React.FC = () => {
     ];
 
     return (
-        <div className="bg-white h-full flex flex-col shadow-xl border-l border-stone-200 w-full max-w-[380px] z-10 transition-all duration-300">
+        <div className="bg-white h-full flex flex-col shadow-xl border-l border-stone-200 w-full z-10 transition-all duration-300">
             {/* Header */}
             <div className="p-5 border-b border-stone-100 bg-white sticky top-0 z-10">
                 <div className="flex justify-between items-center mb-4">
