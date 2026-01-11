@@ -54,7 +54,7 @@ export const StatusBar: React.FC = () => {
                     'קרבה': '',
                     'צד': sideText,
                     'קבוצת קשר': guest.groupId || '',
-                    'כמות מוזמנים': 1 + (guest.notes && guest.notes.includes('+') ? parseInt(guest.notes.replace(/\D/g, '')) || 0 : 0),
+                    'כמות מוזמנים': guest.amount || 1,
                     'הערות': guest.notes || ''
                 }
             };
