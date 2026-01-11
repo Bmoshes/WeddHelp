@@ -8,6 +8,7 @@ export interface ExcelColumnMapping {
     groupId?: string;
     phoneNumber?: string;
     age?: string;
+    amount?: string;
     notes?: string;
 }
 

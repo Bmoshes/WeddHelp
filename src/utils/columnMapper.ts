@@ -66,18 +66,27 @@ const COLUMN_PATTERNS = {
         'מספר',
         'number',
     ],
-    notes: [
+    amount: [
         'פלוס כמה',
-        'הערות',
         '+כמה',
+        'כמות',
+        'כמה',
+        'מספר אנשים',
+        'amount',
+        'quantity',
+        'count',
+        'guests',
+        'plus',
+        'seats',
+    ],
+    notes: [
+        'הערות',
         'מלווים',
         'נלווים',
         'notes',
         'comments',
         'comment',
         'הערה',
-        'plus',
-        'guests',
         'additional',
     ],
 };
@@ -97,6 +106,7 @@ export function autoDetectColumns(headers: string[]): {
         groupId: 0,
         age: 0,
         phoneNumber: 0,
+        amount: 0,
         notes: 0,
     };
 
@@ -198,6 +208,32 @@ export function parseAge(value: unknown): number | undefined {
     }
 
     return Math.floor(num);
+}
+
+/**
+ * Parse amount from string value
+ */
+export function parseAmount(value: unknown): number {
+    if (!value) return 1;
+
+    const num = Number(value);
+    if (isNaN(num) || num < 0 || num > 20) {
+        // Fallback for text like "plus 1"
+        const str = String(value).toLowerCase();
+        if (str.includes('+1') || str.includes('plus 1')) return 2;
+        if (str.includes('+2') || str.includes('plus 2')) return 3;
+        return 1;
+    }
+
+    // If it's a "plus how many" column, usually 0 means just the guest (1 seat),
+    // 1 means guest + 1 (2 seats), etc.
+    // However, sometimes user enters total seats.
+    // Let's assume if column name is "plus..." it adds to 1.
+    // BUT simplest logic: if value is small number (0-10), treat as ADDITION if column header implies "plus"?
+    // User said "if written 2 means 2 seats". So we trust the number directly.
+
+    // Correction based on user input: "if written 2 sign that need 2 chairs"
+    return Math.max(1, Math.floor(num));
 }
 
 /**

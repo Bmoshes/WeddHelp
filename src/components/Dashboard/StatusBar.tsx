@@ -347,7 +347,7 @@ export const StatusBar: React.FC = () => {
                             className="border-stone-200 hover:border-blue-400 hover:text-blue-700 hover:bg-blue-50 text-stone-600 flex-1 lg:flex-none justify-center"
                             onClick={handleDownloadTemplate}
                         >
-                            <span className="ml-2">📋</span> <span className="hidden sm:inline">הורד</span> תבנית
+                            <span className="ml-2 text-lg">📥</span> הורד תבנית לאקסל
                         </Button>
 
                         <Button
@@ -355,7 +355,7 @@ export const StatusBar: React.FC = () => {
                             className="border-stone-200 hover:border-amber-400 hover:text-amber-700 hover:bg-amber-50 text-stone-600 flex-1 lg:flex-none justify-center"
                             onClick={() => setShowImport(true)}
                         >
-                            <span className="ml-2">📊</span> ייבוא <span className="hidden sm:inline">Excel</span>
+                            <span className="ml-2">📊</span> ייבוא&nbsp;<span className="hidden sm:inline">מקובץ Excel</span>
                         </Button>
 
                         <Button
@@ -363,7 +363,7 @@ export const StatusBar: React.FC = () => {
                             onClick={handleExcelExport}
                             className="border-stone-200 hover:border-green-400 hover:text-green-700 hover:bg-green-50 text-stone-600 flex-1 lg:flex-none justify-center"
                         >
-                            <span className="ml-2">📥</span> יצוא <span className="hidden sm:inline">לאקסל</span>
+                            <span className="ml-2">📥</span> יצוא&nbsp;<span className="hidden sm:inline">לאקסל</span>
                         </Button>
 
                         <div className="h-8 w-px bg-stone-200 mx-1 hidden lg:block"></div>

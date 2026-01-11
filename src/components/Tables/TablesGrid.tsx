@@ -1,6 +1,6 @@
 import React from 'react';
 import { useSeatingStore } from '../../store/seatingStore';
-import { TableCard } from './TableCard';
+import { TableCard } from './TableCard.tsx';
 import { Button } from '../shared/Button';
 
 export const TablesGrid: React.FC = () => {
@@ -13,17 +13,20 @@ export const TablesGrid: React.FC = () => {
         const capacityInput = prompt('כמה מקומות בשולחן?', '10');
         if (capacityInput) {
             const capacity = parseInt(capacityInput);
-            if (!isNaN(capacity) && capacity > 0 && capacity <= 50) {
+            if (!isNaN(capacity) && capacity > 0 && capacity <= 100) {
+                // Default to Knight (Rectangle) if capacity > 12, otherwise Regular (Round)
+                // Note: We'll need to update the table immediately after creation or update store to accept type.
+                // For now, let's assume valid capacity.
                 addTable(capacity);
             } else {
-                alert('נא להזין מספר תקין בין 1 ל-50');
+                alert('נא להזין מספר תקין בין 1 ל-100');
             }
         }
     };
 
     return (
         <div className="h-full flex flex-col">
-            <div className="flex justify-between items-center mb-6">
+            <div className="flex justify-between items-center mb-6 px-4">
                 <h2 className="text-2xl font-bold text-stone-800 flex items-center gap-2">
                     <span className="text-amber-500">🍽️</span>
                     סידור השולחנות
@@ -39,7 +42,7 @@ export const TablesGrid: React.FC = () => {
                 </Button>
             </div>
 
-            <div className="flex-1 overflow-y-auto pr-2 pb-10 scrollbar-thin scrollbar-thumb-stone-200 scrollbar-track-transparent">
+            <div className="flex-1 overflow-y-auto px-4 pb-20 scrollbar-thin scrollbar-thumb-stone-200 scrollbar-track-transparent">
                 {tables.length === 0 ? (
                     <div className="flex flex-col items-center justify-center h-[50vh] text-stone-400 border-2 border-dashed border-stone-200 rounded-2xl bg-stone-50/50">
                         <div className="text-6xl mb-4 opacity-50">🍽️</div>
@@ -50,7 +53,8 @@ export const TablesGrid: React.FC = () => {
                         </Button>
                     </div>
                 ) : (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                    // RESTRICTED TO MAX 3 COLUMNS for spaciousness
+                    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-12 mx-auto max-w-[1600px]">
                         {sortedTables.map((table) => {
                             const tableGuests = guests.filter((g) => g.tableId === table.id);
                             return (

@@ -114,6 +114,8 @@ export const useSeatingStore = create<SeatingStore>((set, get) => ({
             number: get().tables.length + 1,
             capacity,
             assignedGuests: [],
+            // Auto-detect type: If capacity > 12, assume Knight (Rectangle). Else Regular (Round).
+            type: capacity > 12 ? 'knight' : 'regular',
         };
         set((state) => ({
             tables: [...state.tables, table],
@@ -154,8 +156,16 @@ export const useSeatingStore = create<SeatingStore>((set, get) => ({
         if (!table || !guest) return;
 
         // Check capacity
-        if (table.assignedGuests.length >= table.capacity) {
-            alert('השולחן מלא!');
+        // Calculate current occupancy based on amounts
+        const currentOccupancy = table.assignedGuests.reduce((sum, gId) => {
+            const g = get().guests.find(x => x.id === gId);
+            return sum + (g?.amount || 1);
+        }, 0);
+
+        const guestAmount = guest.amount || 1;
+
+        if (currentOccupancy + guestAmount > table.capacity) {
+            alert(`השולחן מלא! (תפוסה: ${currentOccupancy}/${table.capacity}, מנסה להוסיף: ${guestAmount})`);
             return;
         }
 

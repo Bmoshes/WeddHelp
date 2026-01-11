@@ -29,7 +29,14 @@ export const Dashboard: React.FC = () => {
 
     const handleDragStart = (event: DragStartEvent) => {
         const { active } = event;
-        const guestId = active.id as string;
+        let guestId = active.id as string;
+
+        // Handle dragging from Table (DraggableChair)
+        // IDs are formatted as `${guest.id}-chair-${chairIndex}`
+        if (guestId.includes('-chair-')) {
+            guestId = guestId.split('-chair-')[0];
+        }
+
         const guest = guests.find(g => g.id === guestId);
         if (guest) setActiveGuest(guest);
     };
@@ -40,7 +47,12 @@ export const Dashboard: React.FC = () => {
 
         if (!over) return;
 
-        const guestId = active.id as string;
+        let guestId = active.id as string;
+        // Handle dragging from Table
+        if (guestId.includes('-chair-')) {
+            guestId = guestId.split('-chair-')[0];
+        }
+
         const targetId = over.id as string;
         const tableData = over.data?.current?.table;
 
@@ -83,9 +95,12 @@ export const Dashboard: React.FC = () => {
                 `} onClick={() => setIsSidebarOpen(false)} />
 
                 <div className={`
-                    fixed md:relative z-20 h-full bg-white shadow-xl md:shadow-none transition-transform duration-300 ease-in-out
-                    w-[85vw] md:w-[380px] shrink-0 border-l border-stone-200
-                    ${isSidebarOpen ? 'translate-x-0' : 'translate-x-[100%] md:translate-x-0'}
+                    fixed md:relative z-20 h-full bg-white shadow-xl md:shadow-none transition-all duration-300 ease-in-out
+                    border-l border-stone-200
+                    ${isSidebarOpen
+                        ? 'translate-x-0 w-[85vw] md:w-[380px] opacity-100'
+                        : 'translate-x-[100%] md:translate-x-0 w-[85vw] md:w-0 md:opacity-0 md:overflow-hidden md:border-none'
+                    }
                     right-0 top-0
                 `}>
                     <GuestList />
@@ -102,12 +117,21 @@ export const Dashboard: React.FC = () => {
                 <div className="flex-1 flex flex-col h-full overflow-hidden relative w-full">
                     {/* Header / Status Bar Area */}
                     <div className="p-4 md:p-6 pb-2 shrink-0 z-10 bg-stone-50">
-                        <header className="hidden md:flex items-baseline justify-between mb-6">
-                            <div>
-                                <h1 className="text-3xl font-bold text-stone-800 tracking-tight">
-                                    <span className="text-amber-500">✨</span> Wedding Planner
-                                </h1>
-                                <p className="text-stone-500 mt-1">תכנון הושבה חכם ופשוט</p>
+                        <header className="hidden md:flex items-center justify-between mb-6">
+                            <div className="flex items-center gap-4">
+                                <button
+                                    onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+                                    className="p-2 rounded-xl bg-white border border-stone-200 text-stone-600 hover:bg-stone-50 hover:text-amber-500 hover:border-amber-200 transition-all shadow-sm"
+                                    title={isSidebarOpen ? 'סגור סרגל צד' : 'פתח סרגל צד'}
+                                >
+                                    {isSidebarOpen ? '◀' : '▶'}
+                                </button>
+                                <div>
+                                    <h1 className="text-3xl font-bold text-stone-800 tracking-tight flex items-center gap-2">
+                                        <span className="text-amber-500">✨</span> Wedding Planner
+                                    </h1>
+                                    <p className="text-stone-500 text-sm mt-0.5">תכנון הושבה חכם ופשוט</p>
+                                </div>
                             </div>
                         </header>
                         <StatusBar />

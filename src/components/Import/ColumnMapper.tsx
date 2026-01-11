@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Modal } from '../shared/Modal';
 import { Button } from '../shared/Button';
 import { ExcelColumnMapping, ExcelData, Guest } from '../../types';
-import { autoDetectColumns, validateMapping, parseCategory, parseSide, parseAge } from '../../utils/columnMapper';
+import { autoDetectColumns, validateMapping, parseCategory, parseSide, parseAge, parseAmount } from '../../utils/columnMapper';
 import { useSeatingStore } from '../../store/seatingStore';
 
 interface ColumnMapperProps {
@@ -58,6 +58,9 @@ export const ColumnMapper: React.FC<ColumnMapperProps> = ({
                 const rawSide = mapping.side ? String(row[mapping.side] || '').trim() : '';
                 const side = parseSide(rawSide);
 
+                // Parse amount
+                const amount = mapping.amount ? parseAmount(row[mapping.amount]) : 1;
+
                 // Smart Group ID Logic:
                 // 1. Try explicit groupId mapping
                 let groupId = mapping.groupId ? String(row[mapping.groupId] || '').trim() : '';
@@ -71,10 +74,11 @@ export const ColumnMapper: React.FC<ColumnMapperProps> = ({
                     name: name.trim(),
                     category,
                     side,
-                    groupId: groupId || undefined, // Store the specific group name (e.g., "Friend - Army")
+                    groupId: groupId || undefined,
                     age: mapping.age ? parseAge(row[mapping.age]) : undefined,
                     phoneNumber: mapping.phoneNumber ? String(row[mapping.phoneNumber] || '') : undefined,
                     notes: mapping.notes ? String(row[mapping.notes] || '') : undefined,
+                    amount,
                 };
             })
             .filter((g) => g !== null) as Omit<Guest, 'id' | 'conflictsWith'>[];
@@ -143,6 +147,7 @@ export const ColumnMapper: React.FC<ColumnMapperProps> = ({
                     </div>
                     {renderFieldMapper('side', 'צד (חתן/כלה)', false)}
                     {renderFieldMapper('phoneNumber', 'טלפון', false)}
+                    {renderFieldMapper('amount', 'כמות אורחים (פלוס כמה)', false)}
                     {renderFieldMapper('groupId', 'מזהה משפחה (אופציונלי)', false)}
                     {renderFieldMapper('age', 'גיל', false)}
                     {renderFieldMapper('notes', 'הערות', false)}

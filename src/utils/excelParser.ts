@@ -1,6 +1,6 @@
 import * as XLSX from 'xlsx';
 import { ExcelColumnMapping, ExcelData, Guest } from '../types';
-import { autoDetectColumns, parseAge, parseCategory, parseSide, validateMapping } from './columnMapper';
+import { autoDetectColumns, parseAge, parseCategory, parseSide, validateMapping, parseAmount } from './columnMapper';
 
 /**
  * Validate file type and size
@@ -133,6 +133,9 @@ export const processGuests = (data: ExcelData, mapping: ExcelColumnMapping): Gue
         }
 
         const age = mapping.age ? parseAge(row[mapping.age]) : undefined;
+        // Parse amount
+        const amount = mapping.amount ? parseAmount(row[mapping.amount]) : 1;
+
         const notes = getString(mapping.notes);
         const phoneNumber = getString(mapping.phoneNumber);
 
@@ -146,6 +149,7 @@ export const processGuests = (data: ExcelData, mapping: ExcelColumnMapping): Gue
             age,
             phoneNumber: phoneNumber || undefined,
             notes: notes || undefined,
+            amount,
             conflictsWith: [],
         };
     }).filter((g) => g !== null) as Guest[];

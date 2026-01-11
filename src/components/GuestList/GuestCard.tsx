@@ -88,6 +88,13 @@ export const GuestCard: React.FC<GuestCardProps> = ({ guest, onDelete }) => {
                 </div>
 
                 <div className="flex flex-wrap gap-1.5">
+                    {/* Amount Badge - SHOW IF > 1 */}
+                    {guest.amount && guest.amount > 1 && (
+                        <span className="text-[10px] px-2 py-0.5 rounded-full font-bold border bg-purple-100 text-purple-700 border-purple-200 flex items-center gap-1">
+                            👥 {guest.amount}
+                        </span>
+                    )}
+
                     {/* Category Badge */}
                     <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium border ${categoryColors[guest.category] || categoryColors.other}`}>
                         {categoryLabels[guest.category] || guest.category}

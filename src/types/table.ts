@@ -6,6 +6,7 @@ export interface Table {
     capacity: number;
     assignedGuests: string[]; // Guest IDs
     preferredSide?: 'groom' | 'bride' | 'mixed';
+    type?: 'regular' | 'knight'; // Visual shape
 }
 
 export interface SeatingState {

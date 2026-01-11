@@ -54,13 +54,17 @@ export async function optimizeSeating(
     const originalGroups = groupGuestsByRelationship(guests);
 
     // Step 2: Classify groups
+    // Helper to get size of a guest list
+    const getGuestsSize = (list: Guest[]) => list.reduce((sum, g) => sum + (g.amount || 1), 0);
+
     let processedGroups = originalGroups.map(group => {
         const sideCounts = { groom: 0, bride: 0, both: 0 };
         const categoryCounts = { family: 0, friend: 0, colleague: 0, other: 0 };
 
         group.guests.forEach(g => {
-            sideCounts[g.side]++;
-            categoryCounts[g.category]++;
+            const amount = g.amount || 1;
+            sideCounts[g.side] += amount; // Weighted by amount
+            categoryCounts[g.category] += amount;
         });
 
         const dominantSide = Object.entries(sideCounts).reduce((a, b) => a[1] > b[1] ? a : b)[0] as 'groom' | 'bride' | 'both';
@@ -68,6 +72,7 @@ export async function optimizeSeating(
 
         return {
             ...group,
+            size: getGuestsSize(group.guests), // Correct size calculation
             dominantSide,
             dominantCategory,
             isRequestedForKnight: knightTargetGroups.includes(normalize(group.groupId))
@@ -82,7 +87,6 @@ export async function optimizeSeating(
     if (knightConfig.enabled && knightConfig.count > 0) {
         onProgress(20, 'משבץ שולחנות אבירים...');
 
-        // Init Knight Tables
         for (let i = 0; i < knightConfig.count; i++) {
             const tableId = `table-${tableCounter++}`;
             tableAssignments[tableId] = {
@@ -94,40 +98,31 @@ export async function optimizeSeating(
             };
         }
 
-        // Determine Candidates for Knight Tables
-        // STRICT MODE: Only user-selected groups
-        // AUTO MODE: Any 'friend' group (largest first)
+        let knightCandidates = processedGroups.filter(g => g.isRequestedForKnight);
 
-        let knightCandidates: typeof processedGroups = [];
-        const userDefinedGroups = processedGroups.filter(g => g.isRequestedForKnight);
 
-        if (userDefinedGroups.length > 0) {
-            // Strict Mode
-            knightCandidates = userDefinedGroups;
-            // Remove them from general pool immediately
-            processedGroups = processedGroups.filter(g => !g.isRequestedForKnight);
-        } else {
-            // Auto Mode (User left empty) -> Prioritize 'friend' category
+        if (knightCandidates.length === 0) {
             knightCandidates = processedGroups.filter(g => g.dominantCategory === 'friend');
-            // Remove them from general pool (we will put back leftovers later)
             processedGroups = processedGroups.filter(g => g.dominantCategory !== 'friend');
+        } else {
+            processedGroups = processedGroups.filter(g => !g.isRequestedForKnight);
         }
 
-        // Sort descending to fit largest chunks first
         knightCandidates.sort((a, b) => b.size - a.size);
 
         for (const group of knightCandidates) {
-            // Try to fit group in Knight tables
             let guestsToSeat = [...group.guests];
 
             while (guestsToSeat.length > 0) {
                 let bestTableId: string | null = null;
                 let maxSpace = -1;
 
+                // Find best table for this chunk
                 for (let i = 0; i < knightConfig.count; i++) {
                     const tableId = `table-${i}`;
                     const table = tableAssignments[tableId];
-                    const space = table.capacity - table.guests.length;
+                    const currentOccupancy = getGuestsSize(table.guests);
+                    const space = table.capacity - currentOccupancy;
 
                     if (space > 0 && space > maxSpace) {
                         maxSpace = space;
@@ -137,29 +132,52 @@ export async function optimizeSeating(
 
                 if (bestTableId && maxSpace > 0) {
                     const table = tableAssignments[bestTableId];
-                    const chunk = guestsToSeat.splice(0, maxSpace); // Take as many as fit
+                    // We can't just splice arbitrary number of guests because of amounts.
+                    // We need to take guests that fit.
+                    const chunk: Guest[] = [];
+                    let chunkSpace = 0;
 
-                    for (const guest of chunk) {
-                        assignment[guest.id] = bestTableId;
-                        table.guests.push(guest);
+                    for (let i = 0; i < guestsToSeat.length; i++) {
+                        const g = guestsToSeat[i];
+                        const gSize = g.amount || 1;
+                        if (chunkSpace + gSize <= maxSpace) {
+                            chunk.push(g);
+                            chunkSpace += gSize;
+                        }
                     }
-                    if (table.guests.length === chunk.length) { // First assignment
-                        table.side = group.dominantSide;
-                        table.category = group.dominantCategory;
+
+                    // If no guest fits (e.g. maxSpace is 1 but next guest is 2), we're stuck for this table?
+                    // Simpler: Just take them one by one if they fit.
+                    if (chunk.length === 0 && guestsToSeat.length > 0 && (guestsToSeat[0].amount || 1) <= maxSpace) {
+                        chunk.push(guestsToSeat[0]);
+                    }
+
+                    if (chunk.length > 0) {
+                        // Remove from source
+                        chunk.forEach(g => {
+                            const idx = guestsToSeat.findIndex(x => x.id === g.id);
+                            if (idx > -1) guestsToSeat.splice(idx, 1);
+                        });
+
+                        for (const guest of chunk) {
+                            assignment[guest.id] = bestTableId;
+                            table.guests.push(guest);
+                        }
+                        if (table.guests.length === chunk.length) {
+                            table.side = group.dominantSide;
+                            table.category = group.dominantCategory;
+                        }
+                    } else {
+                        // Cannot fit any more guests into best table? 
+                        // Break to avoid infinite loop -> remaining go to pool
+                        break;
                     }
                 } else {
-                    // No space in ANY knight table!
-                    // Return remaining guests to general pool to be seated in standard tables
-                    if (userDefinedGroups.length > 0) {
-                        // In strict mode, user might be annoyed that their specific group didn't fully fit.
-                        console.warn(`User defined group ${group.groupId} didn't fully fit in Knight tables.`);
-                    }
-
                     if (guestsToSeat.length > 0) {
                         processedGroups.push({
                             ...group,
                             guests: guestsToSeat,
-                            size: guestsToSeat.length
+                            size: getGuestsSize(guestsToSeat)
                         });
                     }
                     break;
@@ -171,34 +189,28 @@ export async function optimizeSeating(
     // --- STANDARD TABLES ---
     onProgress(40, 'משבץ שולחנות רגילים...');
 
-    // Sort remaining by size desc
     processedGroups.sort((a, b) => b.size - a.size);
 
     for (const group of processedGroups) {
         let guestsToSeat = [...group.guests];
+        let groupSize = getGuestsSize(guestsToSeat);
 
         while (guestsToSeat.length > 0) {
-            // Strategy: Try to fit WHOLE remaining chunk in existing table, or create new.
-            // Priority is minimizing fragmentation.
-
-
-            // Try to fit WHOLE remaining chunk in existing table
             const currentStandardTableIds = Object.keys(tableAssignments).filter(id => !tableAssignments[id].isKnight);
 
             let bestFitTableId: string | null = null;
             let minRemainingSpace = Infinity;
 
+            // Try to fit WHOLE group
             for (const tableId of currentStandardTableIds) {
                 const table = tableAssignments[tableId];
-                const space = table.capacity - table.guests.length;
+                const currentOccupancy = getGuestsSize(table.guests);
+                const space = table.capacity - currentOccupancy;
 
-                // Compatibility check
                 const isEmpty = table.guests.length === 0;
                 const isSideMatch = table.side === group.dominantSide || table.side === 'both' || isEmpty;
-                // Allow mixing sides if table is mostly empty? No, stick to side rules.
 
-                if (space >= guestsToSeat.length && isSideMatch) {
-                    // It fits! Find the one with smallest remaining space to be tight.
+                if (space >= groupSize && isSideMatch) {
                     if (space < minRemainingSpace) {
                         minRemainingSpace = space;
                         bestFitTableId = tableId;
@@ -207,7 +219,6 @@ export async function optimizeSeating(
             }
 
             if (bestFitTableId) {
-                // Perfect fit found
                 const table = tableAssignments[bestFitTableId];
                 for (const guest of guestsToSeat) {
                     assignment[guest.id] = bestFitTableId;
@@ -218,12 +229,9 @@ export async function optimizeSeating(
                     table.category = group.dominantCategory;
                 }
                 guestsToSeat = [];
-            }
-
-            else {
-                // Cannot fit completely in existing.
-                // Should we open a NEW table if it fits completely there?
-                if (guestsToSeat.length <= tableCapacity) {
+            } else {
+                // Determine split
+                if (groupSize <= tableCapacity) {
                     const newTableId = `table-${tableCounter++}`;
                     tableAssignments[newTableId] = {
                         guests: [],
@@ -238,47 +246,73 @@ export async function optimizeSeating(
                         table.guests.push(guest);
                     }
                     guestsToSeat = [];
-                }
-                else {
-                    // Group is LARGER than specific table, OR larger than any existing gap.
-                    // We must SPLIT.
-                    // Fill an existing table? Or start a new one and fill it?
-                    // To avoid tiny leftovers (e.g. 14 -> 12 + 2), try to split evenly?
-                    // But "Packing" usually means filling tables to the brim.
-                    // Let's stick to FILLING existing/new tables to capacity to minimize table count.
-
-                    // Priority: Fill existing tables that match side.
+                } else {
+                    // Fill existing matching tables
+                    // Strategy: Best Fit / Most Occupied First. Try to fill tables that are already open to avoid creating new ones unnecessarily.
                     let bestPartialTableId: string | null = null;
                     let maxPartialSpace = -1;
 
-                    for (const tableId of currentStandardTableIds) {
-                        const table = tableAssignments[tableId];
-                        const space = table.capacity - table.guests.length;
+                    // Sort tables by occupancy descending (fill the most full ones first)
+                    const sortedCandidateTables = currentStandardTableIds
+                        .map(id => ({ id, table: tableAssignments[id] }))
+                        .sort((a, b) => getGuestsSize(b.table.guests) - getGuestsSize(a.table.guests));
+
+                    for (const { id, table } of sortedCandidateTables) {
+                        const currentOccupancy = getGuestsSize(table.guests);
+                        const space = table.capacity - currentOccupancy;
                         const isEmpty = table.guests.length === 0;
                         const isSideMatch = table.side === group.dominantSide || table.side === 'both' || isEmpty;
 
+                        // Check if we can fit at least the smallest guest unit
                         if (space > 0 && isSideMatch) {
-                            if (space > maxPartialSpace) {
-                                maxPartialSpace = space;
-                                bestPartialTableId = tableId;
-                            }
+                            // Since we sorted by occupancy, the first valid match is our "Best Fit" candidate to fill up.
+                            bestPartialTableId = id;
+                            maxPartialSpace = space;
+                            break;
                         }
                     }
 
                     if (bestPartialTableId) {
-                        // Fill this table
                         const table = tableAssignments[bestPartialTableId];
-                        const chunk = guestsToSeat.splice(0, maxPartialSpace);
-                        for (const guest of chunk) {
-                            assignment[guest.id] = bestPartialTableId;
-                            table.guests.push(guest);
+                        const chunk: Guest[] = [];
+                        let chunkSpace = 0;
+
+                        // Greedy fill
+                        for (let i = 0; i < guestsToSeat.length; i++) {
+                            const g = guestsToSeat[i];
+                            const gSize = g.amount || 1;
+                            if (chunkSpace + gSize <= maxPartialSpace) {
+                                chunk.push(g);
+                                chunkSpace += gSize;
+                            }
                         }
-                        if (table.guests.length === chunk.length) {
-                            table.side = group.dominantSide;
-                            table.category = group.dominantCategory;
+
+                        if (chunk.length === 0 && guestsToSeat.length > 0 && (guestsToSeat[0].amount || 1) <= maxPartialSpace) {
+                            chunk.push(guestsToSeat[0]);
                         }
-                    } else {
-                        // No existing table has space. Create NEW table and fill it.
+
+                        if (chunk.length > 0) {
+                            // Remove from source (safely)
+                            chunk.forEach(ch => {
+                                const idx = guestsToSeat.findIndex(x => x.id === ch.id);
+                                if (idx > -1) guestsToSeat.splice(idx, 1);
+                            });
+
+                            for (const guest of chunk) {
+                                assignment[guest.id] = bestPartialTableId;
+                                table.guests.push(guest);
+                            }
+                            // Recalculate remaining size
+                            groupSize = getGuestsSize(guestsToSeat);
+                        } else {
+                            // Force new table loop
+                            maxPartialSpace = -1;
+                            bestPartialTableId = null;
+                        }
+                    }
+
+                    if (!bestPartialTableId) {
+                        // New table
                         const newTableId = `table-${tableCounter++}`;
                         tableAssignments[newTableId] = {
                             guests: [],
@@ -288,11 +322,28 @@ export async function optimizeSeating(
                             isKnight: false
                         };
                         const table = tableAssignments[newTableId];
-                        // Take as many as fit in capacity
-                        const chunk = guestsToSeat.splice(0, tableCapacity);
-                        for (const guest of chunk) {
-                            assignment[guest.id] = newTableId;
-                            table.guests.push(guest);
+
+                        // Fill new table up to capacity
+                        const chunk: Guest[] = [];
+                        let chunkSpace = 0;
+                        for (let i = 0; i < guestsToSeat.length; i++) {
+                            const g = guestsToSeat[i];
+                            const gSize = g.amount || 1;
+                            if (chunkSpace + gSize <= tableCapacity) {
+                                chunk.push(g);
+                                chunkSpace += gSize;
+                            }
+                        }
+                        if (chunk.length > 0) {
+                            chunk.forEach(ch => {
+                                const idx = guestsToSeat.findIndex(x => x.id === ch.id);
+                                if (idx > -1) guestsToSeat.splice(idx, 1);
+                            });
+                            for (const guest of chunk) {
+                                assignment[guest.id] = newTableId;
+                                table.guests.push(guest);
+                            }
+                            groupSize = getGuestsSize(guestsToSeat);
                         }
                     }
                 }
@@ -302,16 +353,76 @@ export async function optimizeSeating(
         onProgress(40 + Math.floor((processedGroups.indexOf(group) / processedGroups.length) * 50), 'דוחס ומפצל...');
     }
 
+    onProgress(90, 'מאחד שולחנות חצי-ריקים...');
+
+    // --- PHASE C: MERGE SPARSE TABLES ---
+    // Aggressively merge tables that can fit together to maximize space, 
+    // even if it means mixing sides (Groom/Bride).
+
+    // Get all standard tables (exclude Knight tables for now as they are specific)
+    const standardTableIds = Object.keys(tableAssignments).filter(id => !tableAssignments[id].isKnight);
+
+    // Sort by occupancy ascending (smallest tables first) to find easiest merges
+    standardTableIds.sort((a, b) => {
+        return getGuestsSize(tableAssignments[a].guests) - getGuestsSize(tableAssignments[b].guests);
+    });
+
+    const mergedTableIds = new Set<string>();
+
+    for (let i = 0; i < standardTableIds.length; i++) {
+        const idA = standardTableIds[i];
+        if (mergedTableIds.has(idA)) continue;
+
+        const tableA = tableAssignments[idA];
+        const sizeA = getGuestsSize(tableA.guests);
+
+        // Don't touch full tables
+        if (sizeA >= tableA.capacity) continue;
+
+        // Try to find a partner
+        for (let j = i + 1; j < standardTableIds.length; j++) {
+            const idB = standardTableIds[j];
+            if (mergedTableIds.has(idB)) continue;
+
+            const tableB = tableAssignments[idB];
+            const sizeB = getGuestsSize(tableB.guests);
+
+            // Check if they fit together
+            if (sizeA + sizeB <= tableA.capacity) { // Assuming both have same capacity usually
+                // MERGE B into A
+                tableA.guests = [...tableA.guests, ...tableB.guests];
+                tableA.side = 'both'; // Mark as mixed
+
+                // Update assignment helper (will be done in final mapping anyway, but good for tracking)
+                // We actually need to clear tableB so it doesn't get outputted
+                delete tableAssignments[idB];
+                mergedTableIds.add(idB);
+
+                // Update sizeA for potential further merges? (Greedy: one merge per table A for simplicity, or continue)
+                // Let's break to keep it simple and safe for now.
+                break;
+            }
+        }
+    }
+
     onProgress(100, 'הושבה הושלמה!');
 
-    // Transform assignments
-    const resultTables = Object.entries(tableAssignments).map(([id, table]) => ({
-        id,
-        ...table
-    }));
+    // Re-generate assignments map from the final tables to ensure it reflects merges
+    const finalAssignment: Assignment = {};
+    const resultTables = Object.entries(tableAssignments).map(([id, table]) => {
+        // Update assignment for all guests in this table
+        table.guests.forEach(g => {
+            finalAssignment[g.id] = id;
+        });
+
+        return {
+            id,
+            ...table
+        };
+    });
 
     return {
-        assignments: assignment,
+        assignments: finalAssignment,
         tables: resultTables
     };
 }

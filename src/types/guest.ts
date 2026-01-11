@@ -11,6 +11,7 @@ export interface Guest {
     age?: number;
     phoneNumber?: string;
     notes?: string;
+    amount?: number; // Number of seats needed (default 1)
     conflictsWith: string[]; // Array of guest IDs
 }
 
