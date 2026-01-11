@@ -16,7 +16,6 @@ export const StatusBar: React.FC = () => {
         optimizationProgress,
         setOptimizationProgress,
         applyOptimizedSeating,
-        importData,
         addTable,
         removeTable,
     } = useSeatingStore();
