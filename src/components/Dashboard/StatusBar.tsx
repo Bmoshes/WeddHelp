@@ -316,28 +316,7 @@ export const StatusBar: React.FC = () => {
         }
     };
 
-    const handleImportJSON = () => {
-        const input = document.createElement('input');
-        input.type = 'file';
-        input.accept = '.json';
-        input.onchange = (e) => {
-            const file = (e.target as HTMLInputElement).files?.[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = (e) => {
-                    try {
-                        const data = JSON.parse(e.target?.result as string);
-                        importData(data);
-                        alert('נתונים יובאו בהצלחה!');
-                    } catch (error) {
-                        alert('שגיאה בקריאת הקובץ');
-                    }
-                };
-                reader.readAsText(file);
-            }
-        };
-        input.click();
-    };
+
 
     return (
         <>
