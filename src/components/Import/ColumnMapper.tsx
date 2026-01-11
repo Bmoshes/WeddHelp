@@ -76,7 +76,7 @@ export const ColumnMapper: React.FC<ColumnMapperProps> = ({
                     side,
                     groupId: groupId || undefined,
                     age: mapping.age ? parseAge(row[mapping.age]) : undefined,
-                    phoneNumber: mapping.phoneNumber ? String(row[mapping.phoneNumber] || '') : undefined,
+                    phoneNumber: mapping.phoneNumber ? String(row[mapping.phoneNumber] || '').replace(/^0+/, '').replace(/-/g, '') : undefined,
                     notes: mapping.notes ? String(row[mapping.notes] || '') : undefined,
                     amount,
                 };

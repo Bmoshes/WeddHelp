@@ -137,7 +137,8 @@ export const processGuests = (data: ExcelData, mapping: ExcelColumnMapping): Gue
         const amount = mapping.amount ? parseAmount(row[mapping.amount]) : 1;
 
         const notes = getString(mapping.notes);
-        const phoneNumber = getString(mapping.phoneNumber);
+        const rawPhone = getString(mapping.phoneNumber);
+        const phoneNumber = rawPhone ? rawPhone.replace(/^0+/, '').replace(/-/g, '') : '';
 
         return {
             id: crypto.randomUUID() as string,
