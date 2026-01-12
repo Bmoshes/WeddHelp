@@ -24,6 +24,14 @@ export const validateExcelFile = (file: File): { valid: boolean; error?: string 
 };
 
 /**
+ * Helper to check if a header looks like an Amount/Quantity column
+ */
+const isAmountHeader = (header: string): boolean => {
+    const h = header.trim().toLowerCase();
+    return ['כמות', 'כמה', 'מספר', 'quantity', 'amount', 'count'].some(k => h.includes(k));
+};
+
+/**
  * Read and parse Excel/CSV file
  */
 export const parseExcelFile = async (file: File): Promise<ExcelData> => {
@@ -37,12 +45,6 @@ export const parseExcelFile = async (file: File): Promise<ExcelData> => {
                 const firstSheetName = workbook.SheetNames[0];
                 const worksheet = workbook.Sheets[firstSheetName];
 
-                // Convert to JSON (Array of Objects)
-                // Using header: 0 (default) or not specifying 'header' option attempts to match keys to header row
-                // However, sheet_to_json handles duplicates poorly sometimes. 
-                // Let's stick to header: 1 (Array of Arrays) to get pristine headers and data, 
-                // but then CONVERT it to objects ourselves to match the Type definition expected by the app.
-
                 const rawData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
 
                 if (!rawData || rawData.length === 0) {
@@ -52,6 +54,45 @@ export const parseExcelFile = async (file: File): Promise<ExcelData> => {
 
                 const headers = rawData[0] as string[];
                 const rowsArray = rawData.slice(1) as any[][]; // The data rows
+
+                // Check for "Dynamic Pairs" structure
+                // Heuristic: If we see multiple "Amount" headers, or if the second column is "Amount".
+                // The user's image shows: Name | Amount | Name | Amount ...
+                const amountHeaderCount = headers.filter(h => isAmountHeader(h)).length;
+
+                // If we have multiple amount headers, it's likely the paired structure
+                if (amountHeaderCount > 1) {
+                    console.log('Detected Dynamic Pair Structure');
+                    try {
+                        const guestList = parseDynamicPairs(headers, rowsArray);
+                        resolve({
+                            fileName: file.name,
+                            headers: ['Name', 'Category', 'Amount'], // Dummy headers for display 
+                            // Normlize the data into a standard list of objects {name, amount, category}
+                            // We use 'Name', 'Category', 'Amount' keys to match the headers above,
+                            // so that 'autoDetectColumns' in ColumnMapper will naturally match them.
+                            rows: guestList.map(g => ({
+                                'Name': g.name,
+                                'Amount': g.amount,
+                                'Category': g.category,
+                                // We don't strictly need 'Group' key because ColumnMapper falls back to Category as GroupId
+                            })),
+                            mapping: {
+                                name: 'Name',
+                                amount: 'Amount',
+                                category: 'Category',
+                                side: 'TempSide', // will be undefined/default
+                                groupId: 'Category', // Map groupId to Category explicitly just in case
+                            },
+                            confidence: { name: 100, amount: 100, category: 100, side: 0, groupId: 100, age: 0, phoneNumber: 0, notes: 0 }
+                        });
+                        return;
+                    } catch (err) {
+                        console.error('Failed to parse dynamic pairs, falling back to standard', err);
+                    }
+                }
+
+                // --- Standard Parsing Logic (Old Code) ---
 
                 // Convert array rows to object rows using headers
                 const objectRows: Record<string, unknown>[] = rowsArray.map(row => {
@@ -95,9 +136,57 @@ export const parseExcelFile = async (file: File): Promise<ExcelData> => {
 };
 
 /**
+ * Logic to parse "Group Name | Amount" column pairs
+ */
+const parseDynamicPairs = (headers: string[], rows: any[][]): Array<{ name: string, amount: number, category: string }> => {
+    const guests: Array<{ name: string, amount: number, category: string }> = [];
+
+    // Identify pairs
+    for (let i = 0; i < headers.length; i++) {
+        const currentHeader = headers[i];
+
+        // Check if next column is "Amount"
+        // We look for pairs where the right column is "Amount"
+        // The left column (current) is the "Category/Group Name"
+
+        // Boundary check
+        if (i + 1 >= headers.length) break;
+
+        const nextHeader = headers[i + 1];
+        if (isAmountHeader(nextHeader)) {
+            // Found a pair: Headers[i] is Category, Headers[i+1] is Amount
+            const category = currentHeader.trim();
+
+            // Iterate all rows for this specific pair
+            rows.forEach(row => {
+                const nameVal = row[i];
+                const amountVal = row[i + 1];
+
+                if (nameVal && typeof nameVal === 'string' && nameVal.trim() !== '') {
+                    const amount = parseAmount(amountVal);
+                    guests.push({
+                        name: nameVal.trim(),
+                        amount: amount,
+                        category: category
+                    });
+                }
+            });
+
+            // Skip the next column since we consumed it as 'Amount'
+            i++;
+        }
+    }
+
+    return guests;
+};
+
+/**
  * Process raw excel data into Guest objects based on mapping
  */
 export const processGuests = (data: ExcelData, mapping: ExcelColumnMapping): Guest[] => {
+    // If we have pre-normalized headers (from Dynamic Pair Mode), validation is trivial
+    // But we should still run it standardly.
+
     const { valid, errors } = validateMapping(mapping);
     if (!valid) {
         throw new Error(errors.join('\n'));
@@ -116,6 +205,12 @@ export const processGuests = (data: ExcelData, mapping: ExcelColumnMapping): Gue
         if (!name) return null;
 
         // Parse category
+        // If we are in "Dynamic Mode", the parsed category is passed via 'mapping.category' key
+        // which might be 'TempCategory'. The value in 'row' IS the category name already.
+        // But 'parseCategory' function tries to map string -> enum (family, friend, etc).
+        // The user used "מוזמנים חברים" (Invited Friends), "עבודה דביר" (Work Dvir).
+        // parseCategory logic: includes 'חבר' -> friend, 'עבודה' -> colleague.
+        // So it should still work fine!
         const rawCategory = getString(mapping.category);
         const category = parseCategory(rawCategory);
 

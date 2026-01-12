@@ -324,16 +324,33 @@ export async function optimizeSeating(
                         const table = tableAssignments[newTableId];
 
                         // Fill new table up to capacity
+                        // Fill new table up to capacity
                         const chunk: Guest[] = [];
                         let chunkSpace = 0;
                         for (let i = 0; i < guestsToSeat.length; i++) {
                             const g = guestsToSeat[i];
                             const gSize = g.amount || 1;
-                            if (chunkSpace + gSize <= tableCapacity) {
+
+                            // Condition to add guest:
+                            // 1. Fits within capacity
+                            // 2. OR it's the first guest and it's already larger than standard capacity (Oversized guest case)
+                            if (chunkSpace + gSize <= tableCapacity || (chunk.length === 0 && gSize > tableCapacity)) {
+                                if (chunk.length === 0 && gSize > tableCapacity) {
+                                    // Expand table to fit this giant guest
+                                    table.capacity = gSize;
+                                }
                                 chunk.push(g);
                                 chunkSpace += gSize;
                             }
                         }
+
+                        // Safety check: If for some reason we still didn't pick anyone (shouldn't happen with above logic), force-pick first
+                        if (chunk.length === 0 && guestsToSeat.length > 0) {
+                            const g = guestsToSeat[0];
+                            chunk.push(g);
+                            table.capacity = Math.max(table.capacity, g.amount || 1);
+                        }
+
                         if (chunk.length > 0) {
                             chunk.forEach(ch => {
                                 const idx = guestsToSeat.findIndex(x => x.id === ch.id);
@@ -344,6 +361,11 @@ export async function optimizeSeating(
                                 table.guests.push(guest);
                             }
                             groupSize = getGuestsSize(guestsToSeat);
+                        } else {
+                            // Infinite Loop Guard: If we absolutely cannot seat anyone, break to avoid freeze.
+                            console.error('CRITICAL: Infinite loop detected in seating algorithm. Breaking.', guestsToSeat);
+                            // Dump remaining guests to unseated?
+                            break;
                         }
                     }
                 }
