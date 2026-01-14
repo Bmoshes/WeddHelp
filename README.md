@@ -45,7 +45,7 @@ A smart, interactive application for optimizing wedding seating arrangements. Bu
 
 1.  **Import**: Upload your guest list Excel file. Map the columns (Name, Category, Side, etc.).
 2.  **Configure**: Set your standard table capacity (e.g., 12).
-3.  **Optimize**: Click "Optimize" to run the algorithm. You can choose to set up Knight Tables for specific groups.
+3.  **Optimize**: Click "Optimize" to run the algorithm. You can choose to set up Knight Tables for specific 
 4.  **Refine**: Drag and drop guests to make manual adjustments if needed.
 5.  **Export**: Download the final plan to Excel.
 
