@@ -28,6 +28,10 @@ export const validateExcelFile = (file: File): { valid: boolean; error?: string 
  */
 const isAmountHeader = (header: string): boolean => {
     const h = header.trim().toLowerCase();
+    // Don't match phone-related headers
+    if (h.includes('טלפון') || h.includes('פלאפון') || h.includes('phone') || h.includes('mobile') || h.includes('נייד')) {
+        return false;
+    }
     return ['כמות', 'כמה', 'מספר', 'quantity', 'amount', 'count'].some(k => h.includes(k));
 };
 
@@ -40,8 +44,8 @@ export const parseExcelFile = async (file: File): Promise<ExcelData> => {
 
         reader.onload = (e) => {
             try {
-                const data = e.target?.result;
-                const workbook = XLSX.read(data, { type: 'binary' });
+                const data = new Uint8Array(e.target?.result as ArrayBuffer);
+                const workbook = XLSX.read(data, { type: 'array' });
                 const firstSheetName = workbook.SheetNames[0];
                 const worksheet = workbook.Sheets[firstSheetName];
 
@@ -52,7 +56,7 @@ export const parseExcelFile = async (file: File): Promise<ExcelData> => {
                     return;
                 }
 
-                const headers = rawData[0] as string[];
+                const headers = (rawData[0] as any[]).map(h => (h == null ? '' : String(h)));
                 const rowsArray = rawData.slice(1) as any[][]; // The data rows
 
                 // Check for "Dynamic Pairs" structure
@@ -125,13 +129,13 @@ export const parseExcelFile = async (file: File): Promise<ExcelData> => {
                 });
 
             } catch (error) {
-                console.error(error);
-                reject(new Error('שגיאה בקריאת הקובץ'));
+                console.error('XLSX parse error:', error);
+                reject(new Error('שגיאה: ' + (error instanceof Error ? error.message : String(error))));
             }
         };
 
         reader.onerror = () => reject(new Error('שגיאה בקריאת הקובץ'));
-        reader.readAsBinaryString(file);
+        reader.readAsArrayBuffer(file);
     });
 };
 

@@ -28,8 +28,9 @@ export const FileUpload: React.FC<FileUploadProps> = ({ onDataParsed }) => {
             const data = await parseExcelFile(file);
             onDataParsed(data);
         } catch (err) {
-            setError('שגיאה בקריאת הקובץ. אנא ודא שהקובץ תקין.');
-            console.error(err);
+            const msg = err instanceof Error ? err.message : String(err);
+            setError(msg);
+            console.error('FileUpload error:', err);
         } finally {
             setIsLoading(false);
         }

@@ -21,6 +21,16 @@ export const ColumnMapper: React.FC<ColumnMapperProps> = ({
     const [confidence, setConfidence] = useState<Record<string, number>>({});
     const [errors, setErrors] = useState<string[]>([]);
 
+    const totalGuests = React.useMemo(() => {
+        if (!mapping.amount) return excelData.rows.length;
+        return excelData.rows.reduce((sum, row) => {
+            const val = row[mapping.amount!];
+            const num = Number(val);
+            if (isNaN(num) || num <= 0) return sum;
+            return sum + Math.floor(num);
+        }, 0);
+    }, [mapping.amount, excelData.rows]);
+
     useEffect(() => {
         if (isOpen && excelData.headers.length > 0) {
             const { mapping: autoMapping, confidence: autoConfidence } = autoDetectColumns(excelData.headers);
@@ -84,7 +94,8 @@ export const ColumnMapper: React.FC<ColumnMapperProps> = ({
             .filter((g) => g !== null) as Omit<Guest, 'id' | 'conflictsWith'>[];
 
         importGuests(guests);
-        alert(`${guests.length} אורחים יובאו בהצלחה!`);
+        const total = guests.reduce((sum, g) => sum + (g.amount || 1), 0);
+        alert(`${total} אורחים יובאו בהצלחה!`);
         onClose();
     };
 
@@ -169,7 +180,7 @@ export const ColumnMapper: React.FC<ColumnMapperProps> = ({
                         ביטול
                     </Button>
                     <Button variant="primary" onClick={handleImport}>
-                        ייבוא {excelData.rows.length} אורחים
+                        ייבוא {totalGuests} אורחים
                     </Button>
                 </div>
             </div>
