@@ -41,6 +41,22 @@ A smart, interactive application for optimizing wedding seating arrangements. Bu
 
 4.  Open `http://localhost:5173` in your browser.
 
+## Deployment
+
+This project is a static Vite application. It can be deployed without a backend server.
+
+### Recommended: Vercel
+
+1. Push the repository to GitHub.
+2. Import the repository into Vercel.
+3. Vercel will detect the Vite setup automatically.
+4. Build command: `npm run build`
+5. Output directory: `dist`
+
+### Alternative: GitHub Pages
+
+A GitHub Actions workflow already exists in `.github/workflows/deploy.yml` and can deploy the `dist` folder to GitHub Pages after pushing to `main` or `master`.
+
 ## 📝 Usage
 
 1.  **Import**: Upload your guest list Excel file. Map the columns (Name, Category, Side, etc.).

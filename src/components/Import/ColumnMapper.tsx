@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Modal } from '../shared/Modal';
 import { Button } from '../shared/Button';
 import { ExcelColumnMapping, ExcelData, Guest } from '../../types';
-import { autoDetectColumns, validateMapping, parseCategory, parseSide, parseAge, parseAmount } from '../../utils/columnMapper';
+import { autoDetectColumns, validateMapping, parseCategory, parseSide, parseAge, parseAmount, parsePhoneNumber } from '../../utils/columnMapper';
 import { useSeatingStore } from '../../store/seatingStore';
 
 interface ColumnMapperProps {
@@ -86,7 +86,7 @@ export const ColumnMapper: React.FC<ColumnMapperProps> = ({
                     side,
                     groupId: groupId || undefined,
                     age: mapping.age ? parseAge(row[mapping.age]) : undefined,
-                    phoneNumber: mapping.phoneNumber ? String(row[mapping.phoneNumber] || '').replace(/^0+/, '').replace(/-/g, '') : undefined,
+                    phoneNumber: mapping.phoneNumber ? parsePhoneNumber(row[mapping.phoneNumber]) || undefined : undefined,
                     notes: mapping.notes ? String(row[mapping.notes] || '') : undefined,
                     amount,
                 };
@@ -94,8 +94,6 @@ export const ColumnMapper: React.FC<ColumnMapperProps> = ({
             .filter((g) => g !== null) as Omit<Guest, 'id' | 'conflictsWith'>[];
 
         importGuests(guests);
-        const total = guests.reduce((sum, g) => sum + (g.amount || 1), 0);
-        alert(`${total} אורחים יובאו בהצלחה!`);
         onClose();
     };
 

@@ -15,17 +15,12 @@ export const Modal: React.FC<ModalProps> = ({
     children,
     maxWidth = 'md',
 }) => {
-    // Close on ESC key
     useEffect(() => {
-        const handleEsc = (e: KeyboardEvent) => {
-            if (e.key === 'Escape') onClose();
-        };
-
+        const handleEsc = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
         if (isOpen) {
             document.addEventListener('keydown', handleEsc);
             document.body.style.overflow = 'hidden';
         }
-
         return () => {
             document.removeEventListener('keydown', handleEsc);
             document.body.style.overflow = 'unset';
@@ -34,38 +29,38 @@ export const Modal: React.FC<ModalProps> = ({
 
     if (!isOpen) return null;
 
-    const widthClass = {
-        sm: 'max-w-sm',
-        md: 'max-w-md',
-        lg: 'max-w-lg',
-        xl: 'max-w-xl',
-    }[maxWidth];
+    const widthClass = { sm: 'max-w-sm', md: 'max-w-md', lg: 'max-w-lg', xl: 'max-w-xl' }[maxWidth];
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 animate-fade-in">
             {/* Backdrop */}
             <div
-                className="absolute inset-0 bg-black bg-opacity-50"
+                className="absolute inset-0 bg-black/50 backdrop-blur-[2px]"
                 onClick={onClose}
             />
 
-            {/* Modal */}
-            <div className={`relative bg-white rounded-lg shadow-xl ${widthClass} w-full max-h-[90vh] flex flex-col`}>
+            {/* Panel */}
+            <div className={`
+                relative bg-white rounded-2xl shadow-warm-xl border border-[#e4ddd4]
+                ${widthClass} w-full max-h-[90vh] flex flex-col
+                animate-slide-up
+            `}>
                 {/* Header */}
-                <div className="flex items-center justify-between p-4 border-b border-gray-200">
-                    <h2 className="text-xl font-bold text-gray-900">{title}</h2>
+                <div className="flex items-center justify-between px-6 py-4 border-b border-[#ede8df]">
+                    <h2 className="text-base font-bold text-stone-900">{title}</h2>
                     <button
                         onClick={onClose}
-                        className="text-gray-400 hover:text-gray-600 transition-colors"
+                        className="w-7 h-7 flex items-center justify-center rounded-lg
+                                   text-stone-400 hover:text-stone-700 hover:bg-stone-100 transition-colors"
                     >
-                        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
                         </svg>
                     </button>
                 </div>
 
                 {/* Content */}
-                <div className="p-4 overflow-y-auto flex-1">
+                <div className="p-6 overflow-y-auto flex-1">
                     {children}
                 </div>
             </div>

@@ -5,12 +5,18 @@ import { GuestCard } from './GuestCard';
 import { Button } from '../shared/Button';
 import { AddGuestModal } from './AddGuestModal';
 
+const categories = [
+    { id: 'family',    label: 'משפחה', icon: '👨‍👩‍👧‍👦', accent: 'text-amber-600'   },
+    { id: 'friend',    label: 'חברים', icon: '🤝',       accent: 'text-emerald-600' },
+    { id: 'colleague', label: 'עבודה', icon: '💼',       accent: 'text-blue-600'    },
+    { id: 'other',     label: 'אחר',   icon: '✨',       accent: 'text-stone-500'   },
+];
+
 export const GuestList: React.FC = () => {
     const { guests, removeGuest } = useSeatingStore();
     const [searchTerm, setSearchTerm] = useState('');
     const [isAddModalOpen, setIsAddModalOpen] = useState(false);
 
-    // Filter only unseated guests
     const unseatedGuests = useMemo(() => {
         return guests.filter((g) => !g.tableId && (
             g.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -21,63 +27,62 @@ export const GuestList: React.FC = () => {
 
     const { setNodeRef } = useDroppable({
         id: 'guest-list',
-        data: {
-            type: 'guest-list',
-        },
+        data: { type: 'guest-list' },
     });
 
-    const categories = [
-        { id: 'family', label: 'משפחה', icon: '👨‍👩‍👧‍👦' },
-        { id: 'friend', label: 'חברים', icon: '🍻' },
-        { id: 'colleague', label: 'עבודה', icon: '💼' },
-        { id: 'other', label: 'אחר', icon: '✨' }
-    ];
-
     return (
-        <div className="bg-white h-full flex flex-col shadow-xl border-l border-stone-200 w-full z-10 transition-all duration-300">
-            {/* Header */}
-            <div className="p-5 border-b border-stone-100 bg-white sticky top-0 z-10">
-                <div className="flex justify-between items-center mb-4">
-                    <h2 className="text-2xl font-bold text-stone-800 flex items-center gap-2">
-                        <span className="text-amber-500">📋</span>
-                        רשימת המתנה
-                    </h2>
-                    <span className="bg-amber-100 text-amber-800 text-sm font-bold px-3 py-1 rounded-full shadow-sm">
+        <div className="bg-white h-full flex flex-col border-l border-[#e4ddd4] w-full">
+
+            {/* ── Header ──────────────────────────────────────────────── */}
+            <div className="px-5 pt-5 pb-4 border-b border-[#ede8df] sticky top-0 bg-white z-10">
+                <div className="flex items-center justify-between mb-4">
+                    <div>
+                        <h2 className="text-lg font-bold text-stone-900 leading-tight">רשימת המתנה</h2>
+                        <p className="text-xs text-stone-400 mt-0.5">גרור אורח לשולחן להושיב</p>
+                    </div>
+                    <span className="min-w-[1.75rem] h-7 px-2 flex items-center justify-center
+                                     bg-stone-900 text-white text-xs font-bold rounded-full">
                         {unseatedGuests.length}
                     </span>
                 </div>
 
+                {/* Search + add */}
                 <div className="flex gap-2">
                     <div className="relative flex-1">
                         <input
                             type="text"
                             placeholder="חיפוש אורח..."
-                            className="w-full pl-4 pr-10 py-2.5 bg-stone-50 border border-stone-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-amber-200 focus:border-amber-400 transition-all"
+                            className="w-full pr-9 pl-3 py-2 bg-stone-50 border border-[#e4ddd4] rounded-xl
+                                       text-sm text-stone-800 placeholder-stone-400
+                                       focus:outline-none focus:ring-2 focus:ring-amber-300/60 focus:border-amber-400
+                                       transition-all"
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
                         />
-                        <span className="absolute left-3 top-2.5 text-stone-400">🔍</span>
+                        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-stone-400 text-sm pointer-events-none">
+                            🔍
+                        </span>
                     </div>
                     <Button
                         onClick={() => setIsAddModalOpen(true)}
-                        className="bg-stone-800 text-white hover:bg-stone-700 shadow-md px-3"
+                        className="w-9 h-9 !p-0 bg-stone-900 hover:bg-stone-800 text-white rounded-xl text-xl leading-none"
                         title="הוסף אורח"
                     >
-                        ➕
+                        +
                     </Button>
                 </div>
             </div>
 
-            {/* List */}
+            {/* ── Guest list ───────────────────────────────────────────── */}
             <div
                 ref={setNodeRef}
-                className="flex-1 overflow-y-auto p-4 space-y-4 scrollbar-thin scrollbar-thumb-stone-200 scrollbar-track-transparent bg-stone-50/30"
+                className="flex-1 overflow-y-auto p-4 space-y-5 bg-canvas-100"
             >
                 {unseatedGuests.length === 0 ? (
-                    <div className="text-center py-10 opacity-40">
-                        <div className="text-5xl mb-3">📭</div>
-                        <p className="text-stone-500 font-medium">
-                            {searchTerm ? 'לא נמצאו תוצאות' : 'אין אורחים בהמתנה'}
+                    <div className="flex flex-col items-center justify-center py-16 text-center">
+                        <div className="text-4xl mb-3 opacity-25">📭</div>
+                        <p className="text-sm font-medium text-stone-400">
+                            {searchTerm ? 'לא נמצאו תוצאות' : 'כל האורחים שובצו!'}
                         </p>
                     </div>
                 ) : (
@@ -86,15 +91,21 @@ export const GuestList: React.FC = () => {
                         if (catGuests.length === 0) return null;
 
                         return (
-                            <div key={cat.id} className="mb-4">
-                                <h3 className="text-sm font-bold text-stone-400 mb-2 mr-1 flex items-center gap-1.5">
-                                    <span>{cat.icon}</span>
-                                    {cat.label}
-                                    <span className="bg-stone-100 text-stone-500 w-5 h-5 rounded-full text-[10px] flex items-center justify-center">
+                            <div key={cat.id}>
+                                {/* Category header */}
+                                <div className="flex items-center gap-2 mb-2.5 px-0.5">
+                                    <span className="text-sm leading-none">{cat.icon}</span>
+                                    <span className={`text-[10px] font-bold uppercase tracking-widest ${cat.accent}`}>
+                                        {cat.label}
+                                    </span>
+                                    <div className="flex-1 h-px bg-[#ede8df]" />
+                                    <span className="text-[10px] font-semibold text-stone-400 bg-white
+                                                     border border-[#ede8df] px-1.5 py-0.5 rounded-full">
                                         {catGuests.length}
                                     </span>
-                                </h3>
-                                <div>
+                                </div>
+
+                                <div className="space-y-1.5">
                                     {catGuests.map((guest) => (
                                         <GuestCard
                                             key={guest.id}

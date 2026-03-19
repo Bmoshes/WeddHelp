@@ -3,48 +3,75 @@
 @tailwind utilities;
 
 @layer base {
+  :root {
+    --border:        #e4ddd4;
+    --border-subtle: #ede8df;
+    --canvas:        #f3f0e8;
+    --surface:       #ffffff;
+  }
+
   body {
-    @apply bg-stone-50 text-slate-800 antialiased;
-    font-family: 'Assistant', sans-serif;
+    @apply bg-canvas-100 text-stone-900 antialiased;
+    font-family: 'Assistant', 'Rubik', sans-serif;
   }
 
-  /* Custom scrollbar */
-  ::-webkit-scrollbar {
-    width: 6px;
-    height: 6px;
-  }
-
-  ::-webkit-scrollbar-track {
-    @apply bg-transparent;
-  }
-
-  ::-webkit-scrollbar-thumb {
-    @apply bg-stone-300 rounded-full hover:bg-stone-400 transition-colors;
-  }
+  /* Scrollbars */
+  ::-webkit-scrollbar        { width: 5px; height: 5px; }
+  ::-webkit-scrollbar-track  { @apply bg-transparent; }
+  ::-webkit-scrollbar-thumb  { @apply bg-stone-300 rounded-full; transition: background-color 0.2s; }
+  ::-webkit-scrollbar-thumb:hover { @apply bg-stone-400; }
 }
 
 @layer components {
+  /* ── Buttons ──────────────────────────────────────────── */
   .btn {
-    @apply px-4 py-2 rounded-lg font-medium transition-all duration-300 transform active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none select-none flex items-center justify-center;
+    @apply inline-flex items-center justify-center gap-1.5
+           px-4 py-2 rounded-xl font-semibold text-sm
+           transition-all duration-200
+           active:scale-[0.97]
+           disabled:opacity-40 disabled:cursor-not-allowed disabled:active:scale-100
+           select-none whitespace-nowrap;
   }
 
+  /* Dark slate — primary actions */
   .btn-primary {
-    @apply bg-gradient-to-r from-amber-500 to-amber-600 text-white shadow-md hover:shadow-lg hover:from-amber-600 hover:to-amber-700;
+    @apply bg-stone-900 text-white shadow-warm-xs
+           hover:bg-stone-800 hover:shadow-warm-sm;
   }
 
+  /* White outline — secondary */
   .btn-secondary {
-    @apply bg-white border border-stone-200 text-stone-600 shadow-sm hover:bg-stone-50 hover:border-amber-300 hover:text-amber-700;
+    @apply bg-white border border-[#e4ddd4] text-stone-700 shadow-warm-xs
+           hover:bg-stone-50 hover:border-stone-300 hover:text-stone-900;
   }
 
+  /* Danger */
   .btn-danger {
-    @apply bg-white border border-red-200 text-red-500 hover:bg-red-50 hover:border-red-300 hover:shadow-sm;
+    @apply bg-white border border-red-200 text-red-600
+           hover:bg-red-50 hover:border-red-300;
   }
 
+  /* ── Form inputs ──────────────────────────────────────── */
   .input {
-    @apply w-full px-4 py-2.5 bg-stone-50 border border-stone-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-200 focus:border-amber-400 transition-all text-sm placeholder-stone-400;
+    @apply w-full px-3.5 py-2.5
+           bg-white border border-[#e4ddd4] rounded-xl
+           text-sm text-stone-900 placeholder-stone-400
+           focus:outline-none focus:ring-2 focus:ring-amber-300/60 focus:border-amber-400
+           transition-all duration-150;
+  }
+
+  /* ── Cards ────────────────────────────────────────────── */
+  .card {
+    @apply bg-white rounded-2xl border border-[#e4ddd4] shadow-warm-sm;
   }
 
   .card-hover {
-    @apply transition-all duration-300 hover:shadow-lg hover:-translate-y-1;
+    @apply transition-all duration-200 hover:shadow-warm hover:-translate-y-0.5;
+  }
+
+  /* ── Badges ───────────────────────────────────────────── */
+  .badge {
+    @apply inline-flex items-center gap-1
+           text-[11px] font-semibold px-2 py-0.5 rounded-full border;
   }
 }

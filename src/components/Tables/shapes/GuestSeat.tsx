@@ -5,12 +5,28 @@ import { Guest } from '../../../types';
 
 interface GuestSeatProps {
     guest?: Guest;
-    chairIndex?: number; // For multiple seats per guest
+    chairIndex?: number;
     unassignGuest?: (id: string) => void;
     className?: string;
     style?: React.CSSProperties;
     orientation?: 'horizontal' | 'vertical' | 'angled';
+    /**
+     * When false the name/badge label is suppressed entirely.
+     * Use this in round-table layouts where the parent renders labels
+     * separately at a larger radius to avoid overlap.
+     */
+    showLabel?: boolean;
 }
+
+const sideStyle: Record<string, { border: string; bg: string; ring: string; badge: string }> = {
+    groom: { border: 'border-sky-400',    bg: 'bg-sky-50',    ring: 'ring-sky-100',    badge: 'bg-sky-100 text-sky-700'       },
+    bride: { border: 'border-rose-400',   bg: 'bg-rose-50',   ring: 'ring-rose-100',   badge: 'bg-rose-100 text-rose-700'     },
+    both:  { border: 'border-violet-400', bg: 'bg-violet-50', ring: 'ring-violet-100', badge: 'bg-violet-100 text-violet-700' },
+};
+
+const categoryMap: Record<string, string> = {
+    family: 'משפחה', friend: 'חברים', colleague: 'עבודה', other: 'אחר',
+};
 
 export const GuestSeat: React.FC<GuestSeatProps> = ({
     guest,
@@ -18,21 +34,15 @@ export const GuestSeat: React.FC<GuestSeatProps> = ({
     unassignGuest,
     className = '',
     style,
-    orientation = 'horizontal'
+    orientation = 'horizontal',
+    showLabel = true,
 }) => {
-    // Unique ID for each chair instance
     const draggableId = guest ? `${guest.id}-chair-${chairIndex}` : 'empty-chair';
 
-    const {
-        attributes,
-        listeners,
-        setNodeRef,
-        transform,
-        isDragging
-    } = useDraggable({
+    const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
         id: draggableId,
         disabled: !guest,
-        data: { guest, type: 'seated-guest' }
+        data: { guest, type: 'seated-guest' },
     });
 
     const dragStyle: React.CSSProperties = {
@@ -41,50 +51,13 @@ export const GuestSeat: React.FC<GuestSeatProps> = ({
         ...style,
     };
 
-    // Style logic based on side
-    let borderColor = 'border-stone-300';
-    let bgColor = 'bg-stone-50';
-    let badgeColor = 'bg-stone-200 text-stone-600';
-    let ringColor = '';
+    const ss = guest ? (sideStyle[guest.side] ?? sideStyle.groom) : null;
 
-    if (guest) {
-        if (guest.side === 'groom') {
-            borderColor = 'border-blue-400';
-            bgColor = 'bg-blue-50';
-            badgeColor = 'bg-blue-100 text-blue-700';
-            ringColor = 'ring-blue-100';
-        } else if (guest.side === 'bride') {
-            borderColor = 'border-pink-400';
-            bgColor = 'bg-pink-50';
-            badgeColor = 'bg-pink-100 text-pink-700';
-            ringColor = 'ring-pink-100';
-        } else if (guest.side === 'both') {
-            borderColor = 'border-purple-400';
-            bgColor = 'bg-purple-50';
-            badgeColor = 'bg-purple-100 text-purple-700';
-            ringColor = 'ring-purple-100';
-        }
-    }
-
-    // Category mappings (Hebrew)
-    const categoryMap: Record<string, string> = {
-        'family': 'משפחה',
-        'friend': 'חברים',
-        'colleague': 'עבודה',
-        'other': 'אחר'
-    };
-
-    // Determine what text to show on badge
-    let badgeText = '';
-    if (guest) {
-        // Prefer group ID if it's descriptive, otherwise category
-        if (guest.groupId && !guest.groupId.startsWith?.('individual')) {
-            // Keep group ID short?
-            badgeText = guest.groupId;
-        } else {
-            badgeText = categoryMap[guest.category] || guest.category;
-        }
-    }
+    const badgeText = guest
+        ? (guest.groupId && !guest.groupId.startsWith('individual')
+            ? guest.groupId
+            : categoryMap[guest.category] || guest.category)
+        : '';
 
     return (
         <div
@@ -93,39 +66,36 @@ export const GuestSeat: React.FC<GuestSeatProps> = ({
             {...attributes}
             className={`
                 flex flex-col items-center justify-center
-                transition-all duration-200
+                transition-all duration-150
                 ${isDragging ? 'opacity-0' : ''}
                 ${guest ? 'cursor-grab active:cursor-grabbing' : ''}
                 ${className}
             `}
             style={dragStyle}
         >
-            {/* The Badge Container */}
-            <div className={`
-                relative flex flex-col items-center
-                ${guest ? 'group' : 'opacity-40'}
-            `}>
+            <div className={`relative flex flex-col items-center ${guest ? 'group' : 'opacity-35'}`}>
 
-                {/* Avatar / Circle */}
+                {/* ── Avatar circle ─────────────────────────────────────────── */}
                 <div className={`
-                    w-12 h-12 rounded-full border-2 shadow-sm 
-                    flex items-center justify-center relative z-10
-                    ${borderColor} ${bgColor} ${guest ? 'shadow-md ring-2 ' + ringColor : 'border-dashed'}
+                    w-12 h-12 rounded-full border-2 flex items-center justify-center
+                    relative z-10 transition-all duration-150
+                    ${guest
+                        ? `${ss!.border} ${ss!.bg} shadow-warm-sm ring-2 ${ss!.ring} group-hover:shadow-warm`
+                        : 'border-dashed border-stone-300 bg-white'}
                 `}>
                     {guest ? (
-                        <span className="text-lg">👤</span>
+                        <span className="text-base select-none">👤</span>
                     ) : (
-                        <span className="text-xs text-stone-300"></span>
+                        <span className="text-[10px] text-stone-300 select-none">○</span>
                     )}
 
-                    {/* Delete Button (Hover) */}
+                    {/* Unassign button */}
                     {guest && !isDragging && unassignGuest && (
                         <button
-                            className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-[10px] opacity-0 group-hover:opacity-100 transition-opacity shadow-sm z-30"
-                            onPointerDown={(e) => {
-                                e.stopPropagation();
-                                unassignGuest(guest.id);
-                            }}
+                            className="absolute -top-1.5 -right-1.5 w-5 h-5 flex items-center justify-center
+                                       bg-red-500 text-white rounded-full text-[9px] font-bold
+                                       opacity-0 group-hover:opacity-100 transition-opacity shadow-warm-xs z-30"
+                            onPointerDown={(e) => { e.stopPropagation(); unassignGuest(guest.id); }}
                             title="הסר"
                         >
                             ✕
@@ -133,24 +103,19 @@ export const GuestSeat: React.FC<GuestSeatProps> = ({
                     )}
                 </div>
 
-                {/* Name & Badge Label */}
-                {guest && (
-                    <div className="absolute top-10 flex flex-col items-center w-[120px] z-20 pointer-events-none">
-                        {/* Name */}
+                {/* ── Name + badge label ────────────────────────────────────── */}
+                {guest && showLabel && (
+                    <div className="absolute top-11 flex flex-col items-center w-[100px] z-20 pointer-events-none">
                         <div className={`
-                            text-xs font-bold text-stone-800 px-2 py-0.5 bg-white/95 rounded-md shadow-sm border border-stone-100 
-                            truncate max-w-full mb-0.5 text-center
+                            text-[11px] font-semibold text-stone-800 px-2 py-0.5
+                            bg-white/95 rounded-lg shadow-warm-xs border border-[#e4ddd4]
+                            truncate max-w-full mb-0.5 text-center leading-tight
                             ${orientation === 'angled' ? 'origin-top-left -rotate-45 translate-y-3 translate-x-1' : ''}
                         `}>
                             {guest.name}
                         </div>
-
-                        {/* Relationship / Category Badge */}
                         {badgeText && (
-                            <div className={`
-                                text-[10px] font-medium px-1.5 py-0 rounded-full leading-tight
-                                ${badgeColor}
-                            `}>
+                            <div className={`text-[9px] font-semibold px-1.5 py-0 rounded-full leading-tight ${ss!.badge}`}>
                                 {badgeText}
                             </div>
                         )}

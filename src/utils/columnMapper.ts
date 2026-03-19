@@ -211,6 +211,15 @@ export function parseAge(value: unknown): number | undefined {
 }
 
 /**
+ * Parse phone number from Excel value.
+ * Preserves leading zeros and hyphens so the number round-trips correctly.
+ */
+export function parsePhoneNumber(value: unknown): string {
+    if (value === null || value === undefined || value === '') return '';
+    return String(value).trim();
+}
+
+/**
  * Parse amount from string value
  */
 export function parseAmount(value: unknown): number {

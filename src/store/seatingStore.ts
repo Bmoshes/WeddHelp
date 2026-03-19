@@ -333,8 +333,8 @@ export const useSeatingStore = create<SeatingStore>((set, get) => ({
 
     getSeatingProgress: () => {
         const { guests } = get();
-        const seated = guests.filter((g) => g.tableId).length;
-        const total = guests.length;
+        const seated = guests.filter((g) => g.tableId).reduce((sum, g) => sum + (g.amount || 1), 0);
+        const total = guests.reduce((sum, g) => sum + (g.amount || 1), 0);
         const percentage = total > 0 ? Math.round((seated / total) * 100) : 0;
         return { seated, total, percentage };
     },

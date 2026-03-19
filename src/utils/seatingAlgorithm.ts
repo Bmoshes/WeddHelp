@@ -31,6 +31,18 @@ interface Assignment {
     [guestId: string]: string; // guestId -> tableId
 }
 
+/** Returns true if any guest in list1 conflicts with any guest in list2. */
+function hasConflict(list1: Guest[], list2: Guest[]): boolean {
+    for (const a of list1) {
+        for (const b of list2) {
+            if (a.conflictsWith.includes(b.id) || b.conflictsWith.includes(a.id)) {
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
 /**
  * Main optimization function
  */
@@ -210,7 +222,7 @@ export async function optimizeSeating(
                 const isEmpty = table.guests.length === 0;
                 const isSideMatch = table.side === group.dominantSide || table.side === 'both' || isEmpty;
 
-                if (space >= groupSize && isSideMatch) {
+                if (space >= groupSize && isSideMatch && !hasConflict(table.guests, guestsToSeat)) {
                     if (space < minRemainingSpace) {
                         minRemainingSpace = space;
                         bestFitTableId = tableId;
@@ -264,7 +276,7 @@ export async function optimizeSeating(
                         const isSideMatch = table.side === group.dominantSide || table.side === 'both' || isEmpty;
 
                         // Check if we can fit at least the smallest guest unit
-                        if (space > 0 && isSideMatch) {
+                        if (space > 0 && isSideMatch && !hasConflict(table.guests, guestsToSeat)) {
                             // Since we sorted by occupancy, the first valid match is our "Best Fit" candidate to fill up.
                             bestPartialTableId = id;
                             maxPartialSpace = space;
@@ -409,8 +421,8 @@ export async function optimizeSeating(
             const tableB = tableAssignments[idB];
             const sizeB = getGuestsSize(tableB.guests);
 
-            // Check if they fit together
-            if (sizeA + sizeB <= tableA.capacity) { // Assuming both have same capacity usually
+            // Check if they fit together and have no conflicts
+            if (sizeA + sizeB <= tableA.capacity && !hasConflict(tableA.guests, tableB.guests)) {
                 // MERGE B into A
                 tableA.guests = [...tableA.guests, ...tableB.guests];
                 tableA.side = 'both'; // Mark as mixed
