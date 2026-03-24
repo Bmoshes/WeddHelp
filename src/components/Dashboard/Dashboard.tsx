@@ -53,6 +53,7 @@ export const Dashboard: React.FC = () => {
                         <h1 className="text-base font-bold text-stone-900 tracking-tight">Wedding Planner</h1>
                     </div>
                     <button
+                        aria-label={isSidebarOpen ? 'סגור תפריט צד' : 'פתח תפריט אורחים'}
                         onClick={() => setIsSidebarOpen(!isSidebarOpen)}
                         className="text-xs font-semibold text-stone-600 bg-stone-100 hover:bg-stone-200 px-3 py-1.5 rounded-lg transition-colors"
                     >
@@ -94,6 +95,7 @@ export const Dashboard: React.FC = () => {
                             <button
                                 onClick={() => setIsSidebarOpen(!isSidebarOpen)}
                                 title={isSidebarOpen ? 'סגור סרגל צד' : 'פתח סרגל צד'}
+                                aria-label={isSidebarOpen ? 'סגור סרגל צד' : 'פתח סרגל צד'}
                                 className="w-9 h-9 flex items-center justify-center rounded-xl
                                            bg-white border border-[#e4ddd4] text-stone-500
                                            hover:border-stone-300 hover:text-stone-900
@@ -117,8 +119,15 @@ export const Dashboard: React.FC = () => {
                     </div>
 
                     {/* Tables grid */}
-                    <div className="flex-1 overflow-hidden px-4 md:px-6 pb-6 pt-4">
+                    <div className="flex-1 overflow-hidden px-4 md:px-6 pb-2 pt-4">
                         <TablesGrid />
+                    </div>
+
+                    {/* Privacy Disclaimer Footer */}
+                    <div className="px-4 pb-2 text-center shrink-0">
+                        <p className="text-[10px] text-stone-400 bg-white/50 backdrop-blur-sm mx-auto inline-block px-3 py-1 rounded-full border border-stone-200">
+                            🔒 <b>פרטיותכם מובטחת:</b> נתוני הרשימות נשמרים אישית בדפדפן במחשב זה בלבד.
+                        </p>
                     </div>
                 </div>
 

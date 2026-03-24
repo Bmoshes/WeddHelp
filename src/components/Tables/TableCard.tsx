@@ -68,9 +68,10 @@ export const TableCard: React.FC<TableCardProps> = ({ table, guests }) => {
                                    text-stone-300 hover:text-red-500 hover:bg-red-50
                                    transition-all"
                         title="מחק שולחן"
+                        aria-label={`מחק שולחן מספר ${table.number}`}
                         data-testid="delete-table-btn"
                     >
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
                                 d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                         </svg>
@@ -80,6 +81,7 @@ export const TableCard: React.FC<TableCardProps> = ({ table, guests }) => {
                 {/* ── Top-left: type selector + capacity ──────────────────── */}
                 <div className="absolute top-3 left-4 z-40 flex items-center gap-2">
                     <select
+                        aria-label={`בחר צורת שולחן עבור שולחן ${table.number}`}
                         value={tableType}
                         onChange={(e) => updateTable(table.id, { type: e.target.value as 'regular' | 'knight' })}
                         className="appearance-none text-[11px] font-semibold bg-white border border-[#e4ddd4]
@@ -94,6 +96,7 @@ export const TableCard: React.FC<TableCardProps> = ({ table, guests }) => {
 
                     {isEditingCapacity ? (
                         <input
+                            aria-label="ערוך קיבולת מקומות"
                             autoFocus
                             type="number"
                             className="w-16 bg-white border border-amber-400 rounded-full text-center
@@ -114,6 +117,15 @@ export const TableCard: React.FC<TableCardProps> = ({ table, guests }) => {
                                     : 'bg-white text-stone-700 border-[#e4ddd4] hover:border-amber-300 hover:text-amber-700'}
                             `}
                             title="לחץ לעריכת קיבולת"
+                            aria-label={`קיבולת: ${totalOccupied} מתוך ${table.capacity} מקומות. לחץ לעריכה`}
+                            role="button"
+                            tabIndex={0}
+                            onKeyDown={(e) => {
+                                if (e.key === 'Enter' || e.key === ' ') {
+                                    e.preventDefault();
+                                    setIsEditingCapacity(true);
+                                }
+                            }}
                         >
                             {totalOccupied}/{table.capacity}
                             <span className="opacity-50 font-normal hidden sm:inline">מקומות</span>

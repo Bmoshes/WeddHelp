@@ -50,6 +50,7 @@ export const GuestList: React.FC = () => {
                 <div className="flex gap-2">
                     <div className="relative flex-1">
                         <input
+                            aria-label="חיפוש אורח"
                             type="text"
                             placeholder="חיפוש אורח..."
                             className="w-full pr-9 pl-3 py-2 bg-stone-50 border border-[#e4ddd4] rounded-xl
@@ -67,6 +68,7 @@ export const GuestList: React.FC = () => {
                         onClick={() => setIsAddModalOpen(true)}
                         className="w-9 h-9 !p-0 bg-stone-900 hover:bg-stone-800 text-white rounded-xl text-xl leading-none"
                         title="הוסף אורח"
+                        aria-label="הוסף אורח חדש"
                     >
                         +
                     </Button>

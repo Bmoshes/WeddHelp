@@ -78,9 +78,10 @@ export const GuestCard: React.FC<GuestCardProps> = ({ guest, onDelete }) => {
                                text-stone-300 hover:text-red-500
                                opacity-0 group-hover:opacity-100 transition-all rounded"
                     title="מחק אורח"
+                    aria-label={`מחק את ${guest.name}`}
                     data-testid="delete-guest-btn"
                 >
-                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M6 18L18 6M6 6l12 12" />
                     </svg>
                 </button>
