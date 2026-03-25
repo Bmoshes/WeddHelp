@@ -1,0 +1,81 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e2]:
+  - generic [ref=e3]:
+    - generic [ref=e5]:
+      - generic [ref=e6]:
+        - generic [ref=e7]:
+          - generic [ref=e8]:
+            - heading "רשימת המתנה" [level=2] [ref=e9]
+            - paragraph [ref=e10]: גרור אורח לשולחן להושיב
+          - generic [ref=e11]: "1"
+        - generic [ref=e12]:
+          - generic [ref=e13]:
+            - textbox "חיפוש אורח" [ref=e14]:
+              - /placeholder: חיפוש אורח...
+            - generic: 🔍
+          - button "הוסף אורח חדש" [ref=e15] [cursor=pointer]: +
+      - generic [ref=e17]:
+        - generic [ref=e18]:
+          - generic [ref=e19]: ✨
+          - generic [ref=e20]: אחר
+          - generic [ref=e22]: "1"
+        - generic [ref=e23]:
+          - button "מחק את בדיקה למחיקה בדיקה למחיקה אחר ביחד" [ref=e24]:
+            - button "מחק את בדיקה למחיקה" [active] [ref=e25] [cursor=pointer]:
+              - img [ref=e26]
+            - generic [ref=e28]:
+              - heading "בדיקה למחיקה" [level=4] [ref=e30]
+              - generic [ref=e31]:
+                - generic [ref=e32]: אחר
+                - generic [ref=e33]: ביחד
+          - generic [ref=e36]:
+            - generic [ref=e37]:
+              - heading "מחיקת אורח" [level=2] [ref=e38]
+              - button [ref=e39] [cursor=pointer]:
+                - img [ref=e40]
+            - generic [ref=e43]:
+              - paragraph [ref=e44]: למחוק את בדיקה למחיקה?
+              - generic [ref=e45]:
+                - button "ביטול" [ref=e46] [cursor=pointer]
+                - button "מחק" [ref=e47] [cursor=pointer]
+    - generic [ref=e48]:
+      - generic [ref=e50]:
+        - button "סגור סרגל צד" [ref=e51] [cursor=pointer]: ◀
+        - generic [ref=e52]:
+          - heading "💍 Wedding Planner" [level=1] [ref=e53]:
+            - generic [ref=e54]: 💍
+            - text: Wedding Planner
+          - paragraph [ref=e55]: תכנון הושבה חכם ופשוט
+      - generic [ref=e58]:
+        - generic [ref=e59]:
+          - generic [ref=e60]:
+            - generic [ref=e61]: התקדמות הושבה
+            - generic [ref=e62]:
+              - text: "0"
+              - generic [ref=e63]: / 1
+              - generic [ref=e64]: (0%)
+          - generic [ref=e67]: 1 אורחים · 0 שולחנות
+        - generic [ref=e68]:
+          - button "📥 תבנית" [ref=e69] [cursor=pointer]
+          - button "📊 ייבוא" [ref=e70] [cursor=pointer]
+          - button "📤 יצוא" [ref=e71] [cursor=pointer]
+          - button "✨ אופטימיזציה" [ref=e73] [cursor=pointer]
+          - button "🗑️" [ref=e74] [cursor=pointer]
+      - generic [ref=e76]:
+        - generic [ref=e77]:
+          - generic [ref=e78]:
+            - heading "סידור השולחנות" [level=2] [ref=e79]
+            - generic [ref=e80]: "0"
+          - button "+ שולחן חדש" [ref=e81] [cursor=pointer]:
+            - generic [ref=e82]: +
+            - text: שולחן חדש
+        - generic [ref=e84]:
+          - generic [ref=e85]: 🍽️
+          - heading "עדיין אין שולחנות" [level=3] [ref=e86]
+          - paragraph [ref=e87]: הוסף שולחן או הפעל אופטימיזציה אוטומטית
+          - button "+ הוסף שולחן ראשון" [ref=e88] [cursor=pointer]
+      - paragraph [ref=e90]: "🔒 פרטיותכם מובטחת: נתוני הרשימות נשמרים אישית בדפדפן במחשב זה בלבד."
+  - status [ref=e91]
+```

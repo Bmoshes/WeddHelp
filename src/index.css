@@ -10,9 +10,18 @@
     --surface:       #ffffff;
   }
 
+  html {
+    direction: rtl;
+  }
+
   body {
     @apply bg-canvas-100 text-stone-900 antialiased;
     font-family: 'Assistant', 'Rubik', sans-serif;
+    min-height: 100vh;
+  }
+
+  #root {
+    min-height: 100vh;
   }
 
   /* Scrollbars */
