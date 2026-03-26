@@ -9,7 +9,9 @@
   "scripts": {
     "start": "vite",
     "dev": "vite",
-    "dev:full": "powershell -Command \"Start-Process powershell -ArgumentList '-NoExit','-Command','cd backend; npm run dev'; npm start\"",
+    "dev:backend": "npm run build:algo && cd backend && npm run dev",
+    "dev:all": "npm run build:algo && powershell -Command \"Start-Process powershell -ArgumentList '-NoExit','-Command','cd backend; npm run dev'; npm run dev\"",
+    "dev:full": "npm run build:algo && powershell -Command \"Start-Process powershell -ArgumentList '-NoExit','-Command','cd backend; npm run dev'; npm start\"",
     "build": "tsc && vite build",
     "preview": "vite preview",
     "test": "vitest run",

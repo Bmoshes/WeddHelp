@@ -19,12 +19,26 @@ const COLUMN_MAP = {
   'מספר פלאפון': 'whatsappNumber',
   'כמות': 'amount',
   'מספר אורחים': 'amount',
+  'פלוס כמה': 'amount',
+  'פלוס': 'amount',
+  '+כמה': 'amount',
+  'מספר מלווים': 'amount',
   'צד': 'side',
   'קבוצה': 'group',
   'הערות': 'notes',
   'גיל': 'age',
   'העדפת ארוחה': 'mealPreference',
   'ארוחה': 'mealPreference',
+  // Proximity seating columns (optional)
+  'קרבה': 'relationshipGroup',
+  'קבוצת קרבה': 'relationshipGroup',
+  'קבוצת קשר': 'relationshipGroup',
+  'קשר': 'relationshipGroup',
+  'relationship group': 'relationshipGroup',
+  'relationship': 'relationshipGroup',
+  'עוצמת קרבה': 'relationshipStrength',
+  'קרבה בספרות': 'relationshipStrength',
+  'relationship strength': 'relationshipStrength',
 };
 
 const SIDE_PARSE = {
@@ -84,6 +98,8 @@ async function importFromExcel(buffer, weddingId) {
       const notes = String(row.notes || '').trim();
       const age = parseAge(row.age);
       const mealPreference = MEAL_PARSE[String(row.mealPreference || '').trim().toLowerCase()] || 'none';
+      const relationshipGroup = String(row.relationshipGroup || '').trim();
+      const relationshipStrength = parseRelationshipStrength(row.relationshipStrength);
 
       const invitation = await Invitation.create({
         weddingId,
@@ -93,26 +109,28 @@ async function importFromExcel(buffer, weddingId) {
         side,
         group,
         rsvpToken: crypto.randomUUID(),
+        source: 'excel_import',
       });
       invitationsCreated++;
 
       const firstName = String(row.firstName || householdName.split(' ')[0] || '').trim();
       const lastName = String(row.lastName || (householdName.includes(' ') ? householdName.split(' ').slice(1).join(' ') : '')).trim();
 
-      for (let seat = 0; seat < amount; seat++) {
-        const nameSuffix = amount > 1 && seat > 0 ? ` (${seat + 1})` : '';
-        await Guest.create({
-          weddingId,
-          invitationId: invitation._id,
-          firstName: firstName + nameSuffix,
-          lastName,
-          mealPreference,
-          age,
-          notes,
-          conflictsWith: [],
-        });
-        guestsCreated++;
-      }
+      await Guest.create({
+        weddingId,
+        invitationId: invitation._id,
+        firstName,
+        lastName,
+        mealPreference,
+        amount,
+        age,
+        notes,
+        relationshipGroup,
+        relationshipStrength,
+        conflictsWith: [],
+        source: 'excel_import',
+      });
+      guestsCreated++;
     } catch (err) {
       errors.push(`Row ${i + 2}: ${err.message}`);
     }
@@ -157,6 +175,12 @@ function parseAmount(val) {
 function parseAge(val) {
   const n = parseInt(val, 10);
   if (!isNaN(n) && n >= 0 && n <= 120) return n;
+  return null;
+}
+
+function parseRelationshipStrength(val) {
+  const n = parseInt(val, 10);
+  if (!isNaN(n) && n >= 1 && n <= 5) return n;
   return null;
 }
 

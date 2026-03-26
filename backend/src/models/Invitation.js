@@ -20,6 +20,8 @@ const InvitationSchema = new Schema(
     group:          { type: String, enum: ['family', 'friends', 'work', 'other'], default: 'other' },
     // Secure public token for /rsvp/:token (NOT the MongoDB ObjectId)
     rsvpToken:      { type: String, unique: true },
+    // Import source — 'excel_import' for rows created by the Excel importer
+    source:         { type: String, enum: ['manual', 'excel_import'], default: 'manual' },
     // Soft delete
     isDeleted:      { type: Boolean, default: false },
     deletedAt:      { type: Date,    default: null },

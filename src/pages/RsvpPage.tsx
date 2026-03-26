@@ -1,7 +1,7 @@
 import { FormEvent, useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { apiRequest } from '../app/api';
-import { Field, LoadingBlock } from '../app/ui';
+import { Field, LoadingBlock, SmartNumberInput } from '../app/ui';
 
 export function RsvpPage() {
   const { token } = useParams<{ token: string }>();
@@ -61,7 +61,11 @@ export function RsvpPage() {
             <p className="mt-3 text-sm leading-6 text-stone-300">עמוד תשובה מהיר, מותאם לנייד, בלי חיכוך ובלי בלבול.</p>
           </div>
           <div className="p-5 md:p-6">
-            {loading ? <LoadingBlock /> : error ? <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">{error}</div> : invitation ? (
+            {loading ? (
+              <LoadingBlock />
+            ) : error ? (
+              <div className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">{error}</div>
+            ) : invitation ? (
               <form className="space-y-5" onSubmit={submit}>
                 <div className="rounded-[26px] border border-[#ece2d2] bg-[#fcfbf8] p-5">
                   <p className="text-sm text-stone-500">משק בית</p>
@@ -74,15 +78,24 @@ export function RsvpPage() {
                     ['maybe', 'עדיין בודקים'],
                     ['not_going', 'לא נוכל להגיע'],
                   ].map(([value, label]) => (
-                    <label key={value} className={`flex cursor-pointer items-center justify-between rounded-[24px] border px-4 py-4 transition ${status === value ? 'border-gold-400 bg-gold-50 shadow-warm-sm' : 'border-[#ece2d2] bg-white'}`}>
+                    <label
+                      key={value}
+                      className={`flex cursor-pointer items-center justify-between rounded-[24px] border px-4 py-4 transition ${
+                        status === value ? 'border-gold-400 bg-gold-50 shadow-warm-sm' : 'border-[#ece2d2] bg-white'
+                      }`}
+                    >
                       <span className="font-semibold text-stone-900">{label}</span>
                       <input type="radio" name="rsvpStatus" value={value} checked={status === value} onChange={() => setStatus(value as 'going' | 'not_going' | 'maybe')} />
                     </label>
                   ))}
                 </div>
-                <Field label="סכום מתנה (אופציונלי)"><input className="input" type="number" min="0" value={giftAmount} onChange={(event) => setGiftAmount(event.target.value)} /></Field>
-                {message && <div className="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-700">{message}</div>}
-                <button className="btn btn-primary w-full justify-center py-3 text-base" disabled={saving}>{saving ? 'שומר...' : 'לשלוח תשובה'}</button>
+                <Field label="סכום מתנה (אופציונלי)">
+                  <SmartNumberInput className="input" value={giftAmount} onChange={(value) => setGiftAmount(String(value))} />
+                </Field>
+                {message ? <div className="rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-700">{message}</div> : null}
+                <button className="btn btn-primary w-full justify-center py-3 text-base" disabled={saving}>
+                  {saving ? 'שומר...' : 'לשלוח תשובה'}
+                </button>
               </form>
             ) : null}
           </div>

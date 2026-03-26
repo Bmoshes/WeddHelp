@@ -8,45 +8,45 @@ const TASK_TEMPLATES = [
   // ---- בירוקרטיה (Bureaucracy) ----
   { title: 'פתיחת תיק ברבנות',       category: 'bureaucracy', daysBeforeWedding: 365 },
   { title: 'הצהרת רווקות',            category: 'bureaucracy', daysBeforeWedding: 300 },
-  { title: 'רישיון נישואין',          category: 'bureaucracy', daysBeforeWedding: 180 },
+  { title: 'רישיון נישואין',          category: 'bureaucracy', daysBeforeWedding: 180, requiresPayment: true },
   { title: 'הדרכת כלה',               category: 'bureaucracy', daysBeforeWedding: 90  },
-  { title: 'תשלום אקו"ם',             category: 'bureaucracy', daysBeforeWedding: 60  },
+  { title: 'תשלום אקו"ם',             category: 'bureaucracy', daysBeforeWedding: 60,  requiresPayment: true },
   { title: 'כתובה',                   category: 'bureaucracy', daysBeforeWedding: 30  },
 
-  // ---- ספקים מרכזיים (Vendors) ----
-  { title: 'סגירת אולם',              category: 'vendors', daysBeforeWedding: 365 },
-  { title: 'בחירת רב',                category: 'vendors', daysBeforeWedding: 300 },
-  { title: 'צלם סטילס',               category: 'vendors', daysBeforeWedding: 270 },
-  { title: 'צלם וידאו',               category: 'vendors', daysBeforeWedding: 270 },
-  { title: 'DJ',                      category: 'vendors', daysBeforeWedding: 240 },
-  { title: 'מגנטים / בלוקים',         category: 'vendors', daysBeforeWedding: 60  },
+  // ---- ספקים מרכזיים (Vendors) — all require payment ----
+  { title: 'סגירת אולם',              category: 'vendors', daysBeforeWedding: 365, requiresPayment: true },
+  { title: 'בחירת רב',                category: 'vendors', daysBeforeWedding: 300, requiresPayment: true },
+  { title: 'צלם סטילס',               category: 'vendors', daysBeforeWedding: 270, requiresPayment: true },
+  { title: 'צלם וידאו',               category: 'vendors', daysBeforeWedding: 270, requiresPayment: true },
+  { title: 'DJ',                      category: 'vendors', daysBeforeWedding: 240, requiresPayment: true },
+  { title: 'מגנטים / בלוקים',         category: 'vendors', daysBeforeWedding: 60,  requiresPayment: true },
 
-  // ---- לבוש והתארגנות (Attire) ----
-  { title: 'שמלת כלה',                category: 'attire', daysBeforeWedding: 270 },
-  { title: 'חליפת חתן',               category: 'attire', daysBeforeWedding: 120 },
-  { title: 'איפור',                    category: 'attire', daysBeforeWedding: 90  },
-  { title: 'עיצוב שיער',              category: 'attire', daysBeforeWedding: 90  },
-  { title: 'סגירת מקום התארגנות',     category: 'attire', daysBeforeWedding: 60  },
-  { title: 'טבעות נישואין',           category: 'attire', daysBeforeWedding: 90  },
-  { title: 'זר כלה',                  category: 'attire', daysBeforeWedding: 30  },
+  // ---- לבוש והתארגנות (Attire) — all require payment ----
+  { title: 'שמלת כלה',                category: 'attire', daysBeforeWedding: 270, requiresPayment: true },
+  { title: 'חליפת חתן',               category: 'attire', daysBeforeWedding: 120, requiresPayment: true },
+  { title: 'איפור',                    category: 'attire', daysBeforeWedding: 90,  requiresPayment: true },
+  { title: 'עיצוב שיער',              category: 'attire', daysBeforeWedding: 90,  requiresPayment: true },
+  { title: 'סגירת מקום התארגנות',     category: 'attire', daysBeforeWedding: 60,  requiresPayment: true },
+  { title: 'טבעות נישואין',           category: 'attire', daysBeforeWedding: 90,  requiresPayment: true },
+  { title: 'זר כלה',                  category: 'attire', daysBeforeWedding: 30,  requiresPayment: true },
 
   // ---- לוגיסטיקה ואירוע (Logistics) ----
   { title: 'טעימות',                  category: 'logistics', daysBeforeWedding: 120 },
   { title: 'פגישת מוזיקה עם DJ',      category: 'logistics', daysBeforeWedding: 60  },
   { title: 'סגירת תפריט אלכוהול',    category: 'logistics', daysBeforeWedding: 45  },
-  { title: 'קניית אלכוהול',           category: 'logistics', daysBeforeWedding: 14  },
+  { title: 'קניית אלכוהול',           category: 'logistics', daysBeforeWedding: 14, requiresPayment: true },
   { title: 'סידורי ישיבה',            category: 'logistics', daysBeforeWedding: 7   },
-  { title: 'מנהל אירוע חיצוני',       category: 'logistics', daysBeforeWedding: 90  },
-  { title: 'תיאום הסעות',             category: 'logistics', daysBeforeWedding: 30  },
+  { title: 'מנהל אירוע חיצוני',       category: 'logistics', daysBeforeWedding: 90, requiresPayment: true },
+  { title: 'תיאום הסעות',             category: 'logistics', daysBeforeWedding: 30, requiresPayment: true },
   { title: 'קישוט רכב',               category: 'logistics', daysBeforeWedding: 1   },
 
   // ---- אקסטרות מסביב (Extras) ----
-  { title: 'עיצוב אולם / חופה',       category: 'extras', daysBeforeWedding: 120 },
-  { title: 'מתנות לאורחים',           category: 'extras', daysBeforeWedding: 30  },
-  { title: 'זוהרים',                  category: 'extras', daysBeforeWedding: 30  },
+  { title: 'עיצוב אולם / חופה',       category: 'extras', daysBeforeWedding: 120, requiresPayment: true },
+  { title: 'מתנות לאורחים',           category: 'extras', daysBeforeWedding: 30,  requiresPayment: true },
+  { title: 'זוהרים',                  category: 'extras', daysBeforeWedding: 30,  requiresPayment: true },
   { title: 'מקווה',                   category: 'extras', daysBeforeWedding: 3   },
-  { title: 'חינה',                    category: 'extras', daysBeforeWedding: 7   },
-  { title: 'שבת חתן',                category: 'extras', daysBeforeWedding: 7   },
+  { title: 'חינה',                    category: 'extras', daysBeforeWedding: 7,   requiresPayment: true },
+  { title: 'שבת חתן',                category: 'extras', daysBeforeWedding: 7,   requiresPayment: true },
   { title: 'חלוקת הזמנות',            category: 'extras', daysBeforeWedding: 45  },
 ];
 
@@ -69,6 +69,7 @@ function generateTasksForWedding(weddingId, weddingDate) {
     dueDate:           new Date(weddingMs - template.daysBeforeWedding * 86_400_000),
     isDone:            false,
     isAutoGenerated:   true,
+    requiresPayment:   template.requiresPayment ?? false,
   }));
 }
 

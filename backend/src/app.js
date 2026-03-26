@@ -1,5 +1,6 @@
 'use strict';
 
+const path = require('path');
 const express = require('express');
 const cors = require('cors');
 const multer = require('multer');
@@ -44,6 +45,9 @@ const upload = multer({
 
 // Attach multer to the Excel import endpoint before the router
 app.use('/api/seating/excel-import', upload.single('file'));
+
+// ── Static uploads (proof images) ─────────────────────────────────────────────
+app.use('/uploads', express.static(path.join(__dirname, '..', 'uploads')));
 
 // ── Routes ────────────────────────────────────────────────────────────────────
 app.use('/api/auth',        authRoutes);

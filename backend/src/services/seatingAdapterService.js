@@ -43,7 +43,7 @@ const SIDE_MAP = {
  *   guest.age || undefined                             → age
  *   invitation.whatsappNumber || undefined             → phoneNumber (derived from Invitation)
  *   guest.notes || undefined                           → notes
- *   1 (constant)                                       → amount    (1 Guest doc = 1 seat)
+ *   guest.amount || 1                                 → amount
  *   guest.conflictsWith.map(id => id.toString())       → conflictsWith
  *
  * @param {string} weddingId — MongoDB ObjectId string (from req.weddingId)
@@ -80,6 +80,8 @@ async function buildLegacyGuestArray(weddingId) {
       return {
         id:           g._id.toString(),
         name:         `${g.firstName} ${g.lastName}`.trim(),
+        firstName:    g.firstName,
+        lastName:     g.lastName || '',
         category:     GROUP_TO_CATEGORY[inv.group] ?? 'other',
         side:         SIDE_MAP[inv.side] ?? 'both',
         groupId:      inv._id.toString(),     // guests in same invitation = same seating group
@@ -87,7 +89,8 @@ async function buildLegacyGuestArray(weddingId) {
         age:          g.age ?? undefined,
         phoneNumber:  inv.whatsappNumber ?? undefined,
         notes:        g.notes || undefined,
-        amount:       1,                      // 1 Guest doc = 1 seat, always
+        relationshipGroup: g.relationshipGroup || '',
+        amount:       g.amount || 1,
         conflictsWith: (g.conflictsWith ?? []).map(id => id.toString()),
       };
     })
@@ -119,6 +122,24 @@ async function persistOptimizationResult(weddingId, optimizationResult, config =
     await Guest.bulkWrite(bulkOps);
   }
 
+  const summarizeRelationshipGroup = (guests) => {
+    const counts = new Map();
+    for (const guest of guests) {
+      const key = (guest.relationshipGroup || '').trim();
+      if (!key) continue;
+      counts.set(key, (counts.get(key) || 0) + 1);
+    }
+    let bestGroup = '';
+    let bestCount = 0;
+    for (const [group, count] of counts.entries()) {
+      if (count > bestCount) {
+        bestGroup = group;
+        bestCount = count;
+      }
+    }
+    return bestGroup;
+  };
+
   // Build table documents for SeatingPlan
   const planTables = tables.map((t, i) => ({
     tableId:          t.id,
@@ -126,6 +147,7 @@ async function persistOptimizationResult(weddingId, optimizationResult, config =
     capacity:         t.capacity,
     isKnight:         t.isKnight ?? false,
     side:             t.side ?? 'both',
+    relationshipGroup: summarizeRelationshipGroup(t.guests),
     // t.guests contains legacy Guest objects with string ids
     assignedGuestIds: t.guests.map(g => g.id),
   }));
@@ -144,4 +166,84 @@ async function persistOptimizationResult(weddingId, optimizationResult, config =
   );
 }
 
-module.exports = { buildLegacyGuestArray, persistOptimizationResult };
+async function syncSeatingPlanFromAssignments(weddingId) {
+  const plan = await SeatingPlan.findOne({ weddingId }).lean();
+  if (!plan) return null;
+
+  const guests = await Guest.find({
+    weddingId,
+    isDeleted: false,
+    assignedTableId: { $ne: null },
+  }).lean();
+
+  const invitationIds = [...new Set(guests.map((guest) => guest.invitationId.toString()))];
+  const invitations = await Invitation.find({
+    _id: { $in: invitationIds },
+    weddingId,
+    isDeleted: false,
+  }).lean();
+
+  const invitationMap = new Map(invitations.map((invitation) => [invitation._id.toString(), invitation]));
+  const guestIdsByTable = new Map();
+
+  for (const guest of guests) {
+    const tableId = guest.assignedTableId;
+    if (!tableId) continue;
+    const bucket = guestIdsByTable.get(tableId) || [];
+    bucket.push(guest);
+    guestIdsByTable.set(tableId, bucket);
+  }
+
+  const summarizeSide = (tableGuests) => {
+    const counts = { groom: 0, bride: 0, both: 0 };
+    for (const guest of tableGuests) {
+      const invitation = invitationMap.get(guest.invitationId.toString());
+      const side = invitation?.side === 'mutual' ? 'both' : invitation?.side || 'both';
+      counts[side] += 1;
+    }
+    return Object.entries(counts).reduce((best, current) => current[1] > best[1] ? current : best)[0];
+  };
+
+  const summarizeRelationshipGroup = (tableGuests) => {
+    const counts = new Map();
+    for (const guest of tableGuests) {
+      const key = (guest.relationshipGroup || '').trim();
+      if (!key) continue;
+      counts.set(key, (counts.get(key) || 0) + 1);
+    }
+    let bestGroup = '';
+    let bestCount = 0;
+    for (const [group, count] of counts.entries()) {
+      if (count > bestCount) {
+        bestGroup = group;
+        bestCount = count;
+      }
+    }
+    return bestGroup;
+  };
+
+  const updatedTables = plan.tables.map((table) => {
+    const tableGuests = guestIdsByTable.get(table.tableId) || [];
+    return {
+      ...table,
+      side: tableGuests.length ? summarizeSide(tableGuests) : table.side ?? 'both',
+      relationshipGroup: tableGuests.length ? summarizeRelationshipGroup(tableGuests) : '',
+      assignedGuestIds: tableGuests.map((guest) => guest._id),
+    };
+  });
+
+  await SeatingPlan.findOneAndUpdate(
+    { weddingId },
+    {
+      $set: {
+        tables: updatedTables,
+        lastOptimizedAt: new Date(),
+      },
+    },
+    { new: true },
+  );
+
+  return updatedTables;
+}
+
+module.exports = { buildLegacyGuestArray, persistOptimizationResult, syncSeatingPlanFromAssignments };

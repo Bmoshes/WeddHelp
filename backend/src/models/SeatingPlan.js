@@ -24,6 +24,7 @@ const SeatingPlanSchema = new Schema(
         capacity:         { type: Number, required: true },
         isKnight:         { type: Boolean, default: false },
         side:             { type: String, default: 'both' },   // 'groom' | 'bride' | 'both'
+        relationshipGroup:{ type: String, default: '' },
         assignedGuestIds: [{ type: Schema.Types.ObjectId, ref: 'Guest' }],
       },
     ],
